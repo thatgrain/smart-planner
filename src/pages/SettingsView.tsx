@@ -1,0 +1,327 @@
+import { useMemo, useRef, useState } from 'react'
+import {
+  Calculator,
+  Check,
+  Database,
+  Download,
+  HardDrive,
+  Info,
+  Percent,
+  RotateCcw,
+  Settings2,
+  Upload,
+  UserRound,
+} from 'lucide-react'
+import type { PlannerController } from '../hooks/usePlanner'
+import { cn } from '../lib/cn'
+import { formatMonthLabel, todayKey, weekdayName } from '../lib/domain/dates'
+import { serialiseState } from '../lib/storage'
+import { downloadTextFile } from '../lib/download'
+import { Badge } from '../components/ui/Badge'
+import { Button } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
+import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { PersonAvatar } from '../components/ui/PersonAvatar'
+import { Switch } from '../components/ui/Switch'
+
+export function SettingsView({ controller }: { controller: PlannerController }) {
+  const { state, month, actions } = controller
+  const [resetOpen, setResetOpen] = useState(false)
+  const [importMessage, setImportMessage] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const storageSize = useMemo(() => {
+    const bytes = new Blob([JSON.stringify(state)]).size
+    if (bytes < 1024) return `${bytes} B`
+    return `${(bytes / 1024).toFixed(1)} KB`
+  }, [state])
+
+  const exportBackup = () => {
+    downloadTextFile(
+      `smartplanner-backup-${todayKey()}.json`,
+      serialiseState(state),
+      'application/json',
+    )
+  }
+
+  const importBackup = async (file: File) => {
+    setImportMessage(null)
+    try {
+      const text = await file.text()
+      const ok = actions.importState(text)
+      setImportMessage(
+        ok
+          ? 'Backup importato correttamente. I dati sono stati sostituiti.'
+          : 'File non valido: il backup deve essere un JSON esportato da SmartPlanner.',
+      )
+    } catch {
+      setImportMessage('Impossibile leggere il file selezionato.')
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-indigo-100 bg-linear-to-br from-indigo-50/80 via-white to-white p-5 shadow-soft">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500">
+          <Settings2 className="h-3.5 w-3.5" />
+          Configurazione
+        </div>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">Impostazioni</h2>
+        <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+          Personalizza nomi, colori e regole di calcolo. In questa fase i dati sono salvati
+          localmente nel browser; puoi esportarli come backup JSON.
+        </p>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="p-5">
+          <div className="flex items-center gap-2">
+            <UserRound className="h-4 w-4 text-indigo-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Persone</h3>
+          </div>
+          <div className="mt-4 space-y-4">
+            {state.people.map((person) => (
+              <div key={person.id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
+                <PersonAvatar person={person} size="lg" />
+                <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[1fr_72px]">
+                  <div>
+                    <label
+                      htmlFor={`person-name-${person.id}`}
+                      className="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                    >
+                      Nome
+                    </label>
+                    <input
+                      id={`person-name-${person.id}`}
+                      type="text"
+                      value={person.name}
+                      onChange={(event) =>
+                        actions.updatePerson(person.id, { name: event.target.value })
+                      }
+                      className="mt-1 h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor={`person-color-${person.id}`}
+                      className="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                    >
+                      Colore
+                    </label>
+                    <input
+                      id={`person-color-${person.id}`}
+                      type="color"
+                      value={person.color}
+                      onChange={(event) =>
+                        actions.updatePerson(person.id, { color: event.target.value })
+                      }
+                      className="mt-1 h-9 w-full cursor-pointer rounded-xl border border-slate-200 bg-white p-1"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <div className="flex items-center gap-2">
+            <Calculator className="h-4 w-4 text-indigo-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Regole di calcolo</h3>
+          </div>
+
+          <div className="mt-4 space-y-4">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3">
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
+                  <Percent className="h-3.5 w-3.5 text-slate-400" />
+                  Limite smart working
+                </div>
+                <div className="mt-0.5 text-[10px] leading-4 text-slate-400">
+                  Percentuale massima di giorni SW sui giorni eleggibili.
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={state.settings.swCapPct}
+                  onChange={(event) => {
+                    const value = Number(event.target.value)
+                    actions.updateSettings({
+                      swCapPct: Number.isFinite(value)
+                        ? Math.min(100, Math.max(0, value))
+                        : 0,
+                    })
+                  }}
+                  className="h-9 w-16 rounded-xl border border-slate-200 bg-white px-2 text-center text-sm font-medium text-slate-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  aria-label="Percentuale massima smart working"
+                />
+                <span className="text-xs text-slate-400">%</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3">
+              <div>
+                <div className="text-xs font-medium text-slate-700">Arrotondamento stretto</div>
+                <div className="mt-0.5 text-[10px] leading-4 text-slate-400">
+                  Con 21 giorni eleggibili il massimo è 10 SW (non 11). Consigliato.
+                </div>
+              </div>
+              <Switch
+                checked={state.settings.strictCap}
+                onChange={(checked) => actions.updateSettings({ strictCap: checked })}
+                label="Arrotondamento stretto"
+              />
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3">
+              <div>
+                <div className="text-xs font-medium text-slate-700">
+                  Presenza senza notte
+                </div>
+                <div className="mt-0.5 text-[10px] leading-4 text-slate-400">
+                  Consente eccezioni di pendolarismo, evidenziate come tali.
+                </div>
+              </div>
+              <Switch
+                checked={state.settings.allowPresenceWithoutNight}
+                onChange={(checked) =>
+                  actions.updateSettings({ allowPresenceWithoutNight: checked })
+                }
+                label="Presenza senza notte"
+              />
+            </div>
+
+            <div className="rounded-xl bg-slate-50 px-3 py-2 text-[10px] leading-4 text-slate-500">
+              <Info className="mr-1 inline h-3 w-3" />
+              Modificare queste regole riporta i mesi in bozza e ricalcola le presenze automatiche.
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <div className="flex items-center gap-2">
+            <Check className="h-4 w-4 text-indigo-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Giorni non lavorativi</h3>
+          </div>
+          <p className="mt-1 text-[11px] leading-5 text-slate-500">
+            Seleziona i giorni della settimana esclusi dal calcolo. Di default sabato e domenica.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+              const active = state.settings.weekendDays.includes(day)
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => {
+                    const next = active
+                      ? state.settings.weekendDays.filter((value) => value !== day)
+                      : [...state.settings.weekendDays, day].sort()
+                    actions.updateSettings({ weekendDays: next })
+                  }}
+                  className={cn(
+                    'rounded-xl border px-3 py-2 text-xs font-medium transition',
+                    active
+                      ? 'border-slate-300 bg-slate-100 text-slate-700'
+                      : 'border-slate-200 bg-white text-slate-400 hover:bg-slate-50',
+                  )}
+                >
+                  {weekdayName(day, true)}
+                </button>
+              )
+            })}
+          </div>
+          <div className="mt-3 text-[10px] text-slate-400">
+            Giorni esclusi: {state.settings.weekendDays.map((day) => weekdayName(day)).join(', ') || 'nessuno'}
+          </div>
+        </Card>
+
+        <Card className="p-5">
+          <div className="flex items-center gap-2">
+            <Database className="h-4 w-4 text-indigo-500" />
+            <h3 className="text-sm font-semibold text-slate-900">Dati e backup</h3>
+          </div>
+          <p className="mt-1 text-[11px] leading-5 text-slate-500">
+            I dati sono salvati in <code className="rounded bg-slate-100 px-1">localStorage</code>.
+            Esporta un backup prima di cambiare browser o dispositivo.
+          </p>
+
+          <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
+            <HardDrive className="h-3 w-3" />
+            Dimensione dati: {storageSize} · {state.nights.length} notti · {state.presence.length} presenze
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" onClick={exportBackup}>
+              <Download className="h-3.5 w-3.5" />
+              Esporta JSON
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-3.5 w-3.5" />
+              Importa JSON
+            </Button>
+            <Button variant="danger" size="sm" onClick={() => setResetOpen(true)}>
+              <RotateCcw className="h-3.5 w-3.5" />
+              Ripristina demo
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) void importBackup(file)
+                event.target.value = ''
+              }}
+            />
+          </div>
+
+          {importMessage ? (
+            <div
+              className={cn(
+                'mt-3 rounded-xl px-3 py-2 text-[11px]',
+                importMessage.startsWith('Backup importato')
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-rose-50 text-rose-700',
+              )}
+            >
+              {importMessage}
+            </div>
+          ) : null}
+
+          <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5 text-[10px] leading-4 text-slate-500">
+            <Info className="mr-1 inline h-3 w-3" />
+            Fase 1: i dati non sono ancora condivisi tra te e il collega. La sincronizzazione
+            Supabase arriverà nella Fase 2.
+          </div>
+        </Card>
+      </div>
+
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[11px] text-slate-500">
+        <span>
+          Mese visualizzato: <span className="font-medium text-slate-700">{formatMonthLabel(month)}</span>
+        </span>
+        <Badge variant="neutral">SmartPlanner · Fase 1</Badge>
+      </div>
+
+      <ConfirmDialog
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        onConfirm={actions.resetDemo}
+        title="Ripristinare i dati demo?"
+        message="Tutte le notti, presenze, assenze e festivi personalizzati verranno sostituiti dai dati iniziali. L'operazione non può essere annullata."
+        confirmLabel="Ripristina"
+        danger
+      />
+    </div>
+  )
+}
