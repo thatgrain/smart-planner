@@ -14,7 +14,7 @@ export function Footer({ cloud }: { cloud: CloudController }) {
   const active = cloud.active
   return (
     <footer className="mx-auto mt-10 w-full max-w-[1400px] px-4 pb-8 sm:px-6">
-      <div className="flex flex-col items-start justify-between gap-2 border-t border-slate-200/70 pt-5 text-xs text-slate-400 sm:flex-row sm:items-center">
+      <div className="flex flex-col items-start justify-between gap-2 border-t border-slate-200/70 dark:border-slate-800/70 pt-5 text-xs text-slate-400 dark:text-slate-500 sm:flex-row sm:items-center">
         <span>SmartPlanner · pianificazione condivisa della stanza</span>
         <span className="inline-flex items-center gap-1.5" title={cloud.sessionEmail ?? undefined}>
           {active ? (

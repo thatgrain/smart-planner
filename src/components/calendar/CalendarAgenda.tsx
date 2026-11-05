@@ -52,8 +52,8 @@ export function CalendarAgenda({
   readOnly?: boolean
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
-      <div className="divide-y divide-slate-100">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft">
+      <div className="divide-y divide-slate-100 dark:divide-slate-800">
         {daysInMonth(month).map((date) => {
           const today = isTodayKey(date)
           const weekend = isWeekend(state, date)
@@ -88,9 +88,9 @@ export function CalendarAgenda({
 
           const rowClassName = cn(
             'flex w-full items-start gap-3 px-3 py-3 text-left transition',
-            !readOnly && 'hover:bg-slate-50',
-            weekend && 'bg-slate-50/60',
-            holiday && 'bg-rose-50/50',
+            !readOnly && 'hover:bg-slate-50 dark:hover:bg-slate-800/60',
+            weekend && 'bg-slate-50/60 dark:bg-slate-900/60',
+            holiday && 'bg-rose-50/50 dark:bg-rose-950/20',
           )
 
           const content = (
@@ -99,19 +99,19 @@ export function CalendarAgenda({
                 <div
                   className={cn(
                     'mx-auto flex h-7 w-7 items-center justify-center rounded-full text-sm font-semibold',
-                    today ? 'bg-indigo-600 text-white' : 'text-slate-700',
+                    today ? 'bg-indigo-600 text-white' : 'text-slate-700 dark:text-slate-300',
                   )}
                 >
                   {formatDayNumber(date)}
                 </div>
-                <div className="mt-0.5 text-[9px] uppercase tracking-wide text-slate-400">
+                <div className="mt-0.5 text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
                   {weekdayName(isoWeekday(date), true)}
                 </div>
               </div>
 
               <div className="min-w-0 flex-1 space-y-1">
                 {holiday ? (
-                  <div className="inline-flex max-w-full items-center gap-1 rounded-md bg-rose-100/80 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
+                  <div className="inline-flex max-w-full items-center gap-1 rounded-md bg-rose-100/80 dark:bg-rose-900/50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:text-rose-300">
                     <Lock className="h-3 w-3 shrink-0" />
                     <span className="truncate">{holiday.name}</span>
                   </div>
@@ -124,7 +124,7 @@ export function CalendarAgenda({
                       return (
                         <span
                           key={absence.id}
-                          className="inline-flex items-center gap-1 rounded-md bg-rose-100/80 px-1.5 py-0.5 text-[10px] font-medium text-rose-700"
+                          className="inline-flex items-center gap-1 rounded-md bg-rose-100/80 dark:bg-rose-900/50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:text-rose-300"
                         >
                           <Icon className="h-3 w-3" />
                           {ABSENCE_SHORT_LABELS[absence.type]}
@@ -137,7 +137,7 @@ export function CalendarAgenda({
                       return (
                         <span
                           key={absence.id}
-                          className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600"
+                          className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-400"
                         >
                           <Icon className="h-3 w-3" />
                           {person.name}
@@ -160,7 +160,7 @@ export function CalendarAgenda({
                       {nightPerson.name}
                     </span>
                   ) : showFreeNight ? (
-                    <span className="text-[10px] text-slate-400">Stanza libera</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">Stanza libera</span>
                   ) : null}
 
                   {present.map((person) => (
@@ -178,26 +178,26 @@ export function CalendarAgenda({
                   ))}
 
                   {handover ? (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 dark:bg-indigo-950/40 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600 dark:text-indigo-400">
                       <ArrowRightLeft className="h-3 w-3" />
                       Passaggio
                     </span>
                   ) : null}
 
-                  {exception ? <Info className="h-3 w-3 text-sky-500" /> : null}
-                  {wastedNight ? <AlertTriangle className="h-3 w-3 text-amber-500" /> : null}
+                  {exception ? <Info className="h-3 w-3 text-sky-500 dark:text-sky-400" /> : null}
+                  {wastedNight ? <AlertTriangle className="h-3 w-3 text-amber-500 dark:text-amber-400" /> : null}
                 </div>
 
                 {smart.length > 0 ? (
-                  <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                    <House className="h-3 w-3 shrink-0 text-slate-400" />
+                  <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
+                    <House className="h-3 w-3 shrink-0 text-slate-400 dark:text-slate-500" />
                     SW: {smart.map((person) => person.name).join(' · ')}
                   </div>
                 ) : null}
               </div>
 
               {!readOnly ? (
-                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
+                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600" />
               ) : null}
             </>
           )

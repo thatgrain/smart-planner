@@ -26,25 +26,25 @@ export function CloudErrorPage({
 
   return (
     <div className="flex min-h-svh items-center justify-center px-4 py-10">
-      <div className="w-full max-w-lg rounded-3xl border border-slate-200/80 bg-white p-6 shadow-soft sm:p-8">
+      <div className="w-full max-w-lg rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 p-6 shadow-soft sm:p-8">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
             {isDatabaseError ? <Database className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
           </span>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-slate-900">{error.title}</h1>
-            <p className="mt-1 text-sm leading-6 text-slate-600">{error.message}</p>
+            <h1 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">{error.title}</h1>
+            <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">{error.message}</p>
           </div>
         </div>
 
         {error.hint ? (
-          <div className="mt-4 rounded-xl bg-slate-50 px-3 py-3 text-[11px] leading-5 text-slate-600">
+          <div className="mt-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-3 text-[11px] leading-5 text-slate-600 dark:text-slate-400">
             {error.hint}
           </div>
         ) : null}
 
         {isDatabaseError ? (
-          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-900 px-3 py-2.5 font-mono text-[10px] text-slate-200">
+          <div className="mt-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-900 px-3 py-2.5 font-mono text-[10px] text-slate-200 dark:bg-slate-950 dark:text-slate-200">
             supabase/migrations/0001_init.sql
           </div>
         ) : null}
@@ -70,7 +70,7 @@ export function CloudErrorPage({
           </Button>
         </div>
 
-        <p className="mt-4 text-center text-[10px] leading-4 text-slate-400">
+        <p className="mt-4 text-center text-[10px] leading-4 text-slate-400 dark:text-slate-500">
           La modalità locale usa solo i dati di questo browser e non sincronizza con Pietro.
         </p>
       </div>

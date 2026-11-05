@@ -25,7 +25,9 @@ import { cn } from '../lib/cn'
 import { formatMonthLabel, todayKey, weekdayName } from '../lib/domain/dates'
 import { serialiseState } from '../lib/storage'
 import { downloadTextFile } from '../lib/download'
+import { ChangePasswordCard } from '../components/account/ChangePasswordCard'
 import { InstallCard } from '../components/pwa/InstallCard'
+import { ThemeCard } from '../components/settings/ThemeCard'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -70,13 +72,13 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-indigo-100 bg-linear-to-br from-indigo-50/80 via-white to-white p-5 shadow-soft">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500">
+      <div className="rounded-2xl border border-indigo-100 dark:border-indigo-900 bg-linear-to-br from-indigo-50/80 via-white to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 p-5 shadow-soft">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400">
           <Settings2 className="h-3.5 w-3.5" />
           Configurazione
         </div>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">Impostazioni</h2>
-        <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">Impostazioni</h2>
+        <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">
           {cloud.active
             ? 'Personalizza nomi, colori e regole di calcolo. Il piano è condiviso con Pietro e sincronizzato in tempo reale; puoi comunque esportare un backup JSON.'
             : 'Personalizza nomi, colori e regole di calcolo. I dati sono salvati localmente nel browser; puoi esportarli come backup JSON.'}
@@ -89,15 +91,15 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
             <span
               className={
                 cloud.active
-                  ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600'
-                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500'
+                  ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'
+                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
               }
             >
               {cloud.active ? <Cloud className="h-5 w-5" /> : <HardDrive className="h-5 w-5" />}
             </span>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-sm font-semibold text-slate-900">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
                   Account e sincronizzazione
                 </h3>
                 <Badge
@@ -126,7 +128,7 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
                             : 'Sincronizzato'}
                 </Badge>
               </div>
-              <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
+              <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                 {cloud.active ? (
                   <>
                     <Mail className="h-3 w-3" />
@@ -181,7 +183,7 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
         </div>
 
         {cloud.syncError ? (
-          <div className="mt-3 flex flex-col gap-2 rounded-xl bg-rose-50 px-3 py-2.5 text-[11px] leading-5 text-rose-700 sm:flex-row sm:items-start">
+          <div className="mt-3 flex flex-col gap-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2.5 text-[11px] leading-5 text-rose-700 dark:text-rose-300 sm:flex-row sm:items-start">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <div className="flex-1">
               <div className="font-medium">{cloud.syncError.title}</div>
@@ -195,15 +197,15 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
           </div>
         ) : null}
 
-        <div className="mt-3 flex items-center gap-1.5 text-[10px] text-slate-400">
+        <div className="mt-3 flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500">
           {cloud.offline ? (
             <>
-              <WifiOff className="h-3 w-3 text-amber-500" />
+              <WifiOff className="h-3 w-3 text-amber-500 dark:text-amber-400" />
               Modalità offline: stai vedendo l'ultimo piano salvato.
             </>
           ) : cloud.active ? (
             <>
-              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+              <CheckCircle2 className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
               Le modifiche vengono sincronizzate in tempo reale con Pietro.
             </>
           ) : (
@@ -216,22 +218,24 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
       </Card>
 
       <InstallCard />
+      <ThemeCard />
+      <ChangePasswordCard cloud={cloud} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
           <div className="flex items-center gap-2">
-            <UserRound className="h-4 w-4 text-indigo-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Persone</h3>
+            <UserRound className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Persone</h3>
           </div>
           <div className="mt-4 space-y-4">
             {state.people.map((person) => (
-              <div key={person.id} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3">
+              <div key={person.id} className="flex items-center gap-3 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
                 <PersonAvatar person={person} size="lg" />
                 <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[1fr_72px]">
                   <div>
                     <label
                       htmlFor={`person-name-${person.id}`}
-                      className="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                      className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500"
                     >
                       Nome
                     </label>
@@ -242,13 +246,13 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
                       onChange={(event) =>
                         actions.updatePerson(person.id, { name: event.target.value })
                       }
-                      className="mt-1 h-9 w-full rounded-xl border border-slate-200 bg-white px-2.5 text-sm text-slate-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                      className="mt-1 h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 text-sm text-slate-700 dark:text-slate-300 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor={`person-color-${person.id}`}
-                      className="text-[10px] font-medium uppercase tracking-wide text-slate-400"
+                      className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500"
                     >
                       Colore
                     </label>
@@ -259,7 +263,7 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
                       onChange={(event) =>
                         actions.updatePerson(person.id, { color: event.target.value })
                       }
-                      className="mt-1 h-9 w-full cursor-pointer rounded-xl border border-slate-200 bg-white p-1"
+                      className="mt-1 h-9 w-full cursor-pointer rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1"
                     />
                   </div>
                 </div>
@@ -270,18 +274,18 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
 
         <Card className="p-5">
           <div className="flex items-center gap-2">
-            <Calculator className="h-4 w-4 text-indigo-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Regole di calcolo</h3>
+            <Calculator className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Regole di calcolo</h3>
           </div>
 
           <div className="mt-4 space-y-4">
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
               <div>
-                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700">
-                  <Percent className="h-3.5 w-3.5 text-slate-400" />
+                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                  <Percent className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
                   Limite smart working
                 </div>
-                <div className="mt-0.5 text-[10px] leading-4 text-slate-400">
+                <div className="mt-0.5 text-[10px] leading-4 text-slate-400 dark:text-slate-500">
                   Percentuale massima di giorni SW sui giorni eleggibili.
                 </div>
               </div>
@@ -300,17 +304,17 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
                         : 0,
                     })
                   }}
-                  className="h-9 w-16 rounded-xl border border-slate-200 bg-white px-2 text-center text-sm font-medium text-slate-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  className="h-9 w-16 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 text-center text-sm font-medium text-slate-700 dark:text-slate-300 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
                   aria-label="Percentuale massima smart working"
                 />
-                <span className="text-xs text-slate-400">%</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">%</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
               <div>
-                <div className="text-xs font-medium text-slate-700">Arrotondamento stretto</div>
-                <div className="mt-0.5 text-[10px] leading-4 text-slate-400">
+                <div className="text-xs font-medium text-slate-700 dark:text-slate-300">Arrotondamento stretto</div>
+                <div className="mt-0.5 text-[10px] leading-4 text-slate-400 dark:text-slate-500">
                   Con 21 giorni eleggibili il massimo è 10 SW (non 11). Consigliato.
                 </div>
               </div>
@@ -321,12 +325,12 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3">
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 dark:border-slate-800 p-3">
               <div>
-                <div className="text-xs font-medium text-slate-700">
+                <div className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   Presenza senza notte
                 </div>
-                <div className="mt-0.5 text-[10px] leading-4 text-slate-400">
+                <div className="mt-0.5 text-[10px] leading-4 text-slate-400 dark:text-slate-500">
                   Consente eccezioni di pendolarismo, evidenziate come tali.
                 </div>
               </div>
@@ -339,7 +343,7 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
               />
             </div>
 
-            <div className="rounded-xl bg-slate-50 px-3 py-2 text-[10px] leading-4 text-slate-500">
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-[10px] leading-4 text-slate-500 dark:text-slate-400">
               <Info className="mr-1 inline h-3 w-3" />
               Modificare queste regole riporta i mesi in bozza e ricalcola le presenze automatiche.
             </div>
@@ -348,10 +352,10 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
 
         <Card className="p-5">
           <div className="flex items-center gap-2">
-            <Check className="h-4 w-4 text-indigo-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Giorni non lavorativi</h3>
+            <Check className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Giorni non lavorativi</h3>
           </div>
-          <p className="mt-1 text-[11px] leading-5 text-slate-500">
+          <p className="mt-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
             Seleziona i giorni della settimana esclusi dal calcolo. Di default sabato e domenica.
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
@@ -370,8 +374,8 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
                   className={cn(
                     'rounded-xl border px-3 py-2 text-xs font-medium transition',
                     active
-                      ? 'border-slate-300 bg-slate-100 text-slate-700'
-                      : 'border-slate-200 bg-white text-slate-400 hover:bg-slate-50',
+                      ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/60',
                   )}
                 >
                   {weekdayName(day, true)}
@@ -379,23 +383,23 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
               )
             })}
           </div>
-          <div className="mt-3 text-[10px] text-slate-400">
+          <div className="mt-3 text-[10px] text-slate-400 dark:text-slate-500">
             Giorni esclusi: {state.settings.weekendDays.map((day) => weekdayName(day)).join(', ') || 'nessuno'}
           </div>
         </Card>
 
         <Card className="p-5">
           <div className="flex items-center gap-2">
-            <Database className="h-4 w-4 text-indigo-500" />
-            <h3 className="text-sm font-semibold text-slate-900">Dati e backup</h3>
+            <Database className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Dati e backup</h3>
           </div>
-          <p className="mt-1 text-[11px] leading-5 text-slate-500">
+          <p className="mt-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
             {cloud.active
               ? 'Il piano è nel cloud e viene salvato anche in questo browser. Esporta un backup JSON se vuoi una copia indipendente.'
               : 'I dati sono salvati in localStorage. Esporta un backup prima di cambiare browser o dispositivo.'}
           </p>
 
-          <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
+          <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400 dark:text-slate-500">
             <HardDrive className="h-3 w-3" />
             Dimensione dati: {storageSize} · {state.nights.length} notti · {state.presence.length} presenze
           </div>
@@ -435,15 +439,15 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
               className={cn(
                 'mt-3 rounded-xl px-3 py-2 text-[11px]',
                 importMessage.startsWith('Backup importato')
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-rose-50 text-rose-700',
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300',
               )}
             >
               {importMessage}
             </div>
           ) : null}
 
-          <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5 text-[10px] leading-4 text-slate-500">
+          <div className="mt-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2.5 text-[10px] leading-4 text-slate-500 dark:text-slate-400">
             <Info className="mr-1 inline h-3 w-3" />
             {cloud.active
               ? 'Importare un backup sostituisce il piano condiviso per entrambi. Usa questa funzione con attenzione.'
@@ -452,9 +456,9 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
         </Card>
       </div>
 
-      <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 text-[11px] text-slate-500">
+      <div className="flex items-center justify-between rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-[11px] text-slate-500 dark:text-slate-400">
         <span>
-          Mese visualizzato: <span className="font-medium text-slate-700">{formatMonthLabel(month)}</span>
+          Mese visualizzato: <span className="font-medium text-slate-700 dark:text-slate-300">{formatMonthLabel(month)}</span>
         </span>
         <Badge variant={cloud.active ? 'success' : 'neutral'}>
           SmartPlanner · {cloud.active ? 'Cloud' : 'Locale'}

@@ -91,7 +91,7 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
         type="button"
         onClick={() => onOpen(date)}
         aria-label={`Vai a ${formatDayLong(date)}`}
-        className="min-h-[124px] border-r border-b border-slate-100/70 bg-slate-50/40 p-2 text-left text-[11px] text-slate-300 transition hover:bg-slate-100/60"
+        className="min-h-[124px] border-r border-b border-slate-100/70 dark:border-slate-800/70 bg-slate-50/40 dark:bg-slate-900/40 p-2 text-left text-[11px] text-slate-300 dark:text-slate-600 transition hover:bg-slate-100/60 dark:hover:bg-slate-800/60"
       >
         {dayNumber}
       </button>
@@ -104,13 +104,13 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
       onClick={() => onOpen(date)}
       aria-label={ariaParts.join(' · ')}
       className={cn(
-        'group relative flex min-h-[124px] flex-col gap-1.5 border-r border-b border-slate-200/80 p-2 text-left transition-colors',
-        weekend ? 'bg-slate-50/70' : 'bg-white',
-        holiday && 'bg-rose-50/60',
-        collectiveAbsences.length > 0 && 'bg-rose-50/40',
+        'group relative flex min-h-[124px] flex-col gap-1.5 border-r border-b border-slate-200/80 dark:border-slate-800/80 p-2 text-left transition-colors',
+        weekend ? 'bg-slate-50/70 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900',
+        holiday && 'bg-rose-50/60 dark:bg-rose-950/30',
+        collectiveAbsences.length > 0 && 'bg-rose-50/40 dark:bg-rose-950/20',
         selected
           ? 'z-10 ring-2 ring-indigo-500 ring-inset'
-          : 'hover:bg-indigo-50/40',
+          : 'hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20',
       )}
     >
       <div className="flex items-start justify-between gap-1">
@@ -119,7 +119,7 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
             'inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-semibold',
             today
               ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-              : 'text-slate-700',
+              : 'text-slate-700 dark:text-slate-300',
           )}
         >
           {dayNumber}
@@ -127,24 +127,24 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
         <div className="flex items-center gap-1 pt-0.5">
           {handover ? (
             <span title="Passaggio: entrambi in ufficio">
-              <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500" />
+              <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
             </span>
           ) : null}
           {wastedNight ? (
             <span title="Notte non sfruttata: nessuna presenza nei giorni adiacenti">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
             </span>
           ) : null}
           {exceptionPeople.length > 0 ? (
             <span title="Presenza senza notte adiacente (eccezione)">
-              <Info className="h-3.5 w-3.5 text-sky-500" />
+              <Info className="h-3.5 w-3.5 text-sky-500 dark:text-sky-400" />
             </span>
           ) : null}
         </div>
       </div>
 
       {holiday ? (
-        <div className="truncate rounded-md bg-rose-100/80 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
+        <div className="truncate rounded-md bg-rose-100/80 dark:bg-rose-900/50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:text-rose-300">
           {holiday.name}
         </div>
       ) : null}
@@ -157,7 +157,7 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
               <span
                 key={`closure-${absence.id}`}
                 title={`${ABSENCE_SHORT_LABELS[absence.type]} per entrambi`}
-                className="inline-flex items-center gap-1 rounded-md bg-rose-100/80 px-1.5 py-0.5 text-[10px] font-medium text-rose-700"
+                className="inline-flex items-center gap-1 rounded-md bg-rose-100/80 dark:bg-rose-900/50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:text-rose-300"
               >
                 <Icon className="h-3 w-3" />
                 {ABSENCE_SHORT_LABELS[absence.type]}
@@ -171,7 +171,7 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
               <span
                 key={`absence-${absence.id}`}
                 title={`${ABSENCE_SHORT_LABELS[absence.type]} di ${person.name}`}
-                className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600"
+                className="inline-flex items-center gap-1 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-600 dark:text-slate-400"
               >
                 <Icon className="h-3 w-3" />
                 {person.name}
@@ -194,7 +194,7 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
           <span className="truncate">{nightPerson.name}</span>
         </div>
       ) : showFreeNight ? (
-        <div className="px-1 text-[10px] text-slate-400">Stanza libera</div>
+        <div className="px-1 text-[10px] text-slate-400 dark:text-slate-500">Stanza libera</div>
       ) : null}
 
       {present.length > 0 ? (
@@ -218,10 +218,10 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
 
       {smartPeople.length > 0 ? (
         <div
-          className="flex items-center gap-1 px-1 text-[10px] text-slate-500"
+          className="flex items-center gap-1 px-1 text-[10px] text-slate-500 dark:text-slate-400"
           title={`Smart working: ${smartPeople.map((p) => p.name).join(', ')}`}
         >
-          <House className="h-3 w-3 shrink-0 text-slate-400" />
+          <House className="h-3 w-3 shrink-0 text-slate-400 dark:text-slate-500" />
           <span className="truncate">SW: {smartPeople.map((p) => p.name).join(' · ')}</span>
         </div>
       ) : null}

@@ -98,13 +98,13 @@ export function DayDrawer({
         className="absolute inset-0 cursor-default bg-slate-950/35 backdrop-blur-[2px] sp-fade-in"
         onClick={onClose}
       />
-      <aside className="relative z-10 flex h-full w-full max-w-md flex-col overflow-hidden bg-white shadow-2xl sp-slide-in sm:m-3 sm:h-[calc(100%-1.5rem)] sm:rounded-3xl">
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+      <aside className="relative z-10 flex h-full w-full max-w-md flex-col overflow-hidden bg-white dark:bg-slate-900 shadow-2xl sp-slide-in sm:m-3 sm:h-[calc(100%-1.5rem)] sm:rounded-3xl">
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 px-5 py-4">
           <div>
-            <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+            <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Dettaglio giornata
             </div>
-            <h2 className="mt-0.5 text-lg font-semibold leading-tight text-slate-900">
+            <h2 className="mt-0.5 text-lg font-semibold leading-tight text-slate-900 dark:text-slate-50">
               {formatDayLong(date)}
             </h2>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -120,16 +120,16 @@ export function DayDrawer({
         <div className="scrollbar-subtle flex-1 space-y-5 overflow-y-auto px-5 py-5">
           <section>
             <div className="flex items-center justify-between gap-2">
-              <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <Moon className="h-3.5 w-3.5 text-indigo-500" />
+              <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <Moon className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
                 Notte in stanza
               </h3>
               {night?.personId ? (
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">
                   {getPerson(state, night.personId).name}
                 </span>
               ) : (
-                <span className="text-[10px] text-slate-400">libera</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">libera</span>
               )}
             </div>
 
@@ -144,8 +144,8 @@ export function DayDrawer({
                     className={cn(
                       'flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-medium transition',
                       active
-                        ? 'text-slate-900 shadow-sm'
-                        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50',
+                        ? 'text-slate-900 dark:text-slate-50 shadow-sm'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60',
                     )}
                     style={
                       active
@@ -166,7 +166,7 @@ export function DayDrawer({
                         <Check className="h-3 w-3" /> Selezionata
                       </span>
                     ) : (
-                      <span className="text-[10px] text-slate-400">Assegna</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500">Assegna</span>
                     )}
                   </button>
                 )
@@ -177,21 +177,21 @@ export function DayDrawer({
                 className={cn(
                   'flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-medium transition',
                   !night?.personId
-                    ? 'border-slate-300 bg-slate-100 text-slate-700'
-                    : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50',
+                    ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60',
                 )}
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-slate-500">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
                   <X className="h-4 w-4" />
                 </span>
                 <span>Libera</span>
-                <span className="text-[10px] text-slate-400">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">
                   {!night?.personId ? 'Selezionata' : 'Nessuno'}
                 </span>
               </button>
             </div>
 
-            <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-slate-50 px-3 py-2 text-[10px] leading-4 text-slate-500">
+            <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-[10px] leading-4 text-slate-500 dark:text-slate-400">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 Una notte copre la presenza del giorno stesso e di quello successivo.
@@ -201,19 +201,19 @@ export function DayDrawer({
               </span>
             </div>
 
-            <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-slate-500">
-              <span className="rounded-md bg-slate-100 px-1.5 py-0.5">
+            <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
+              <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5">
                 Notte precedente: {previousNight?.personId ? getPerson(state, previousNight.personId).name : 'libera'}
               </span>
-              <span className="rounded-md bg-slate-100 px-1.5 py-0.5">
+              <span className="rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5">
                 Notte successiva: {nextNight?.personId ? getPerson(state, nextNight.personId).name : 'libera'}
               </span>
             </div>
           </section>
 
           <section>
-            <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500" />
+            <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
               Presenza in ufficio
             </h3>
             <div className="mt-2 space-y-2">
@@ -231,13 +231,13 @@ export function DayDrawer({
           </section>
 
           <section>
-            <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <Umbrella className="h-3.5 w-3.5 text-slate-400" />
+            <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <Umbrella className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
               Assenze e festivi
             </h3>
             <div className="mt-2 space-y-1.5">
               {holiday ? (
-                <div className="flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-[11px] text-rose-700">
+                <div className="flex items-center gap-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-[11px] text-rose-700 dark:text-rose-300">
                   <Lock className="h-3.5 w-3.5" />
                   <span className="flex-1">{holiday.name}</span>
                   <Badge variant="danger">Festivo</Badge>
@@ -248,7 +248,7 @@ export function DayDrawer({
                 return (
                   <div
                     key={absence.id}
-                    className="flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2 text-[11px] text-rose-700"
+                    className="flex items-center gap-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-[11px] text-rose-700 dark:text-rose-300"
                   >
                     <Icon className="h-3.5 w-3.5" />
                     <span className="flex-1">{ABSENCE_LABELS[absence.type]}</span>
@@ -263,7 +263,7 @@ export function DayDrawer({
                   return (
                     <div
                       key={absence.id}
-                      className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-[11px] text-slate-600"
+                      className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-[11px] text-slate-600 dark:text-slate-400"
                     >
                       <Icon className="h-3.5 w-3.5" />
                       <span className="flex-1">
@@ -275,7 +275,7 @@ export function DayDrawer({
                 }),
               )}
               {!holiday && !hasAnyAbsence ? (
-                <div className="rounded-xl bg-slate-50 px-3 py-2 text-[11px] text-slate-400">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-[11px] text-slate-400 dark:text-slate-500">
                   Nessuna assenza o festivo in questa data.
                 </div>
               ) : null}
@@ -286,9 +286,9 @@ export function DayDrawer({
           </section>
         </div>
 
-        <div className="border-t border-slate-100 bg-slate-50/70 px-5 py-3">
+        <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 px-5 py-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-slate-400 dark:text-slate-500">
               Le modifiche riportano il mese in bozza.
             </span>
             <Button variant="secondary" size="sm" onClick={onClose}>
@@ -337,7 +337,7 @@ function PersonPresenceRow({
     <div
       className={cn(
         'rounded-xl border p-3 transition-colors',
-        present ? 'bg-white' : 'border-slate-200 bg-slate-50/60',
+        present ? 'bg-white dark:bg-slate-900' : 'border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60',
       )}
       style={
         present
@@ -352,8 +352,8 @@ function PersonPresenceRow({
         <div className="flex min-w-0 items-center gap-2">
           <PersonAvatar person={person} size="sm" />
           <div className="min-w-0">
-            <div className="truncate text-xs font-semibold text-slate-900">{person.name}</div>
-            <div className="text-[10px] text-slate-500">
+            <div className="truncate text-xs font-semibold text-slate-900 dark:text-slate-50">{person.name}</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400">
               {eligible ? coverageLabel : getEligibilityLabel(state, person.id, date)}
             </div>
           </div>
@@ -367,14 +367,14 @@ function PersonPresenceRow({
           onClick={onToggle}
           className={cn(
             'relative mt-0.5 inline-flex h-6 w-10 shrink-0 items-center rounded-full border transition-colors',
-            present ? 'border-transparent' : 'border-slate-300 bg-slate-200',
+            present ? 'border-transparent' : 'border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-700',
             !canToggle && 'cursor-not-allowed opacity-40',
           )}
           style={present ? { backgroundColor: person.color } : undefined}
         >
           <span
             className={cn(
-              'inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
+              'inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform dark:bg-slate-100',
               present ? 'translate-x-5' : 'translate-x-0.5',
             )}
           />
@@ -415,17 +415,17 @@ function PersonPresenceRow({
       </div>
 
       {!eligible ? (
-        <div className="mt-2 flex items-start gap-1.5 text-[10px] leading-4 text-slate-500">
+        <div className="mt-2 flex items-start gap-1.5 text-[10px] leading-4 text-slate-500 dark:text-slate-400">
           <Info className="mt-0.5 h-3 w-3 shrink-0" />
           La presenza non è conteggiata in un giorno non eleggibile.
         </div>
       ) : !covered && present ? (
-        <div className="mt-2 flex items-start gap-1.5 text-[10px] leading-4 text-amber-700">
+        <div className="mt-2 flex items-start gap-1.5 text-[10px] leading-4 text-amber-700 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
           Presenza senza pernottamento adiacente: è un'eccezione consentita.
         </div>
       ) : !covered && !present && !state.settings.allowPresenceWithoutNight ? (
-        <div className="mt-2 flex items-start gap-1.5 text-[10px] leading-4 text-slate-500">
+        <div className="mt-2 flex items-start gap-1.5 text-[10px] leading-4 text-slate-500 dark:text-slate-400">
           <Info className="mt-0.5 h-3 w-3 shrink-0" />
           Presenza senza notte disabilitata nelle impostazioni.
         </div>
@@ -435,7 +435,7 @@ function PersonPresenceRow({
         <button
           type="button"
           onClick={onReset}
-          className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 hover:text-slate-700"
+          className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
         >
           <RotateCcw className="h-3 w-3" />
           Ripristina proposta automatica

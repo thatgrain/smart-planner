@@ -120,15 +120,15 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-indigo-100 bg-linear-to-br from-indigo-50/80 via-white to-white p-5 shadow-soft">
-        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500">
+      <div className="rounded-2xl border border-indigo-100 dark:border-indigo-900 bg-linear-to-br from-indigo-50/80 via-white to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 p-5 shadow-soft">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400">
           <CalendarDays className="h-3.5 w-3.5" />
           Calcolo mensile
         </div>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
           Assenze e festivi
         </h2>
-        <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+        <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">
           Ferie, malattia, permessi e chiusure aziendali vengono esclusi dal calcolo del 50%:
           riducono i giorni eleggibili della persona interessata o di entrambi. I weekend sono
           sempre esclusi.
@@ -138,13 +138,13 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-slate-900">Nuova assenza</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Nuova assenza</h3>
             <Badge variant="info">Individuale o collettiva</Badge>
           </div>
 
           <div className="mt-4 space-y-4">
             <div>
-              <label className="text-[11px] font-medium text-slate-600">Persona</label>
+              <label className="text-[11px] font-medium text-slate-600 dark:text-slate-400">Persona</label>
               <div className="mt-1.5 grid grid-cols-3 gap-1.5">
                 {state.people.map((item) => (
                   <button
@@ -154,8 +154,8 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                     className={cn(
                       'rounded-xl border px-2 py-2 text-xs font-medium transition',
                       person === item.id
-                        ? 'border-indigo-300 bg-indigo-50 text-indigo-700'
-                        : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
+                        ? 'border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60',
                     )}
                   >
                     {item.name}
@@ -167,8 +167,8 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                   className={cn(
                     'rounded-xl border px-2 py-2 text-xs font-medium transition',
                     person === 'both'
-                      ? 'border-rose-300 bg-rose-50 text-rose-700'
-                      : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50',
+                      ? 'border-rose-300 dark:border-rose-700 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60',
                   )}
                 >
                   Entrambi
@@ -177,14 +177,14 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
             </div>
 
             <div>
-              <label htmlFor="absence-type" className="text-[11px] font-medium text-slate-600">
+              <label htmlFor="absence-type" className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
                 Tipo
               </label>
               <select
                 id="absence-type"
                 value={type}
                 onChange={(event) => handleTypeChange(event.target.value as AbsenceType)}
-                className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
               >
                 <option value="vacation">Ferie</option>
                 <option value="sick">Malattia</option>
@@ -195,7 +195,7 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="absence-start" className="text-[11px] font-medium text-slate-600">
+                <label htmlFor="absence-start" className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
                   Dal
                 </label>
                 <input
@@ -203,11 +203,11 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                   type="date"
                   value={start}
                   onChange={(event) => setStart(event.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
                 />
               </div>
               <div>
-                <label htmlFor="absence-end" className="text-[11px] font-medium text-slate-600">
+                <label htmlFor="absence-end" className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
                   Al
                 </label>
                 <input
@@ -215,14 +215,14 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                   type="date"
                   value={end}
                   onChange={(event) => setEnd(event.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="absence-note" className="text-[11px] font-medium text-slate-600">
-                Nota <span className="font-normal text-slate-400">(opzionale)</span>
+              <label htmlFor="absence-note" className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
+                Nota <span className="font-normal text-slate-400 dark:text-slate-500">(opzionale)</span>
               </label>
               <input
                 id="absence-note"
@@ -230,15 +230,15 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 placeholder="Es. ponte, visita medica, chiusura estiva…"
-                className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
               />
             </div>
 
             {error ? (
-              <div className="rounded-xl bg-rose-50 px-3 py-2 text-[11px] text-rose-700">{error}</div>
+              <div className="rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-[11px] text-rose-700 dark:text-rose-300">{error}</div>
             ) : null}
             {message ? (
-              <div className="rounded-xl bg-emerald-50 px-3 py-2 text-[11px] text-emerald-700">
+              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-[11px] text-emerald-700 dark:text-emerald-300">
                 {message}
               </div>
             ) : null}
@@ -252,10 +252,10 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
 
         <Card className="p-5">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-slate-900">Festivi {year}</h3>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Festivi {year}</h3>
             <Badge variant="neutral">{yearHolidays.length} giorni</Badge>
           </div>
-          <p className="mt-1 text-[11px] leading-5 text-slate-500">
+          <p className="mt-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
             I festivi nazionali sono precompilati. Puoi aggiungere il santo patrono o una
             chiusura aziendale come festivo personalizzato.
           </p>
@@ -266,7 +266,7 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
               value={holidayDate}
               onChange={(event) => setHolidayDate(event.target.value)}
               aria-label="Data festivo"
-              className="h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs text-slate-700 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+              className="h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-700 dark:text-slate-300 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
             />
             <input
               type="text"
@@ -274,7 +274,7 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
               onChange={(event) => setHolidayName(event.target.value)}
               placeholder="Nome del festivo"
               aria-label="Nome festivo"
-              className="h-9 rounded-xl border border-slate-200 bg-white px-2.5 text-xs text-slate-700 outline-none placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+              className="h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-700 dark:text-slate-300 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
             />
             <Button variant="secondary" size="sm" onClick={submitHoliday}>
               <Plus className="h-3.5 w-3.5" />
@@ -282,7 +282,7 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
             </Button>
           </div>
           {holidayError ? (
-            <div className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-[11px] text-rose-700">
+            <div className="mt-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-[11px] text-rose-700 dark:text-rose-300">
               {holidayError}
             </div>
           ) : null}
@@ -291,14 +291,14 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
             {yearHolidays.map((holiday) => (
               <div
                 key={holiday.date}
-                className="flex items-center gap-2 rounded-xl border border-slate-100 px-3 py-2"
+                className="flex items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-800 px-3 py-2"
               >
-                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500" />
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs font-medium text-slate-700">
+                  <div className="truncate text-xs font-medium text-slate-700 dark:text-slate-300">
                     {holiday.name}
                   </div>
-                  <div className="text-[10px] text-slate-400">{formatDayShort(holiday.date)}</div>
+                  <div className="text-[10px] text-slate-400 dark:text-slate-500">{formatDayShort(holiday.date)}</div>
                 </div>
                 <Badge variant={holiday.source === 'national' ? 'neutral' : 'info'}>
                   {holiday.source === 'national' ? 'Nazionale' : 'Personalizzato'}
@@ -307,14 +307,14 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                   type="button"
                   onClick={() => setDeleteHolidayDate(holiday.date)}
                   aria-label={`Elimina ${holiday.name}`}
-                  className="rounded-lg p-1 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                  className="rounded-lg p-1 text-slate-400 dark:text-slate-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-400"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
             ))}
             {yearHolidays.length === 0 ? (
-              <div className="rounded-xl bg-slate-50 px-3 py-3 text-[11px] text-slate-400">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-3 text-[11px] text-slate-400 dark:text-slate-500">
                 Nessun festivo per il {year}.
               </div>
             ) : null}
@@ -325,8 +325,8 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
       <Card className="p-5">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h3 className="text-sm font-semibold text-slate-900">Assenze registrate</h3>
-            <p className="text-[11px] text-slate-500">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Assenze registrate</h3>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               Periodo visualizzato: {formatMonthLabel(month)}
             </p>
           </div>
@@ -345,20 +345,20 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                 key={absence.id}
                 className={cn(
                   'flex items-start gap-3 rounded-xl border px-3 py-3',
-                  isCollective ? 'border-rose-100 bg-rose-50/40' : 'border-slate-100 bg-white',
+                  isCollective ? 'border-rose-100 dark:border-rose-900 bg-rose-50/40 dark:bg-rose-950/20' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900',
                 )}
               >
                 <span
                   className={cn(
                     'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl',
-                    isCollective ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500',
+                    isCollective ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400',
                   )}
                 >
                   <Icon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs font-semibold text-slate-800">
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                       {ABSENCE_LABELS[absence.type]}
                     </span>
                     <Badge variant={isCollective ? 'danger' : 'neutral'}>{personName}</Badge>
@@ -366,7 +366,7 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                       {days} {days === 1 ? 'giorno' : 'giorni'}
                     </Badge>
                   </div>
-                  <div className="mt-1 text-[11px] text-slate-500">
+                  <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                     {formatRange(absence.start, absence.end)}
                     {absence.note ? ` · ${absence.note}` : ''}
                   </div>
@@ -375,7 +375,7 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                   type="button"
                   onClick={() => setDeleteAbsenceId(absence.id)}
                   aria-label={`Elimina assenza ${ABSENCE_LABELS[absence.type]}`}
-                  className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                  className="rounded-lg p-1.5 text-slate-400 dark:text-slate-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-400"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -383,7 +383,7 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
             )
           })}
           {sortedAbsences.length === 0 ? (
-            <div className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-3 text-[11px] text-slate-500">
+            <div className="flex items-start gap-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-3 text-[11px] text-slate-500 dark:text-slate-400">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Nessuna assenza registrata. Le ferie e le chiusure aggiunte qui vengono escluse dal
               calcolo del 50%.
@@ -392,8 +392,8 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
         </div>
       </Card>
 
-      <div className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] leading-5 text-slate-500">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500" />
+      <div className="flex items-start gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500 dark:text-indigo-400" />
         <span>
           Le assenze non cancellano automaticamente le notti già assegnate: l'app segnala le notti
           durante un'assenza e puoi liberarle dal dettaglio del giorno. La chiusura aziendale è

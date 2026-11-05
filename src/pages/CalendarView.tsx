@@ -34,15 +34,15 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
 
   return (
     <div className="space-y-5">
-      <div className="hidden rounded-2xl border border-indigo-100 bg-linear-to-br from-indigo-50/80 via-white to-white p-5 shadow-soft lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+      <div className="hidden rounded-2xl border border-indigo-100 dark:border-indigo-900 bg-linear-to-br from-indigo-50/80 via-white to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 p-5 shadow-soft lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-4">
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400">
             Piano del mese
           </div>
-          <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
+          <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
             {formatMonthLabel(month)}
           </h2>
-          <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+          <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">
             Assegna le notti, controlla le presenze proposte e verifica il limite del 50% di
             smart working. Clicca un giorno per modificare il dettaglio.
           </p>
@@ -82,8 +82,8 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
       <div className="space-y-2">
         <div className="hidden flex-col gap-2 md:flex md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Calendario</h2>
-            <p className="text-[11px] text-slate-500">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Calendario</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               Notte, ufficio e smart working in un'unica vista.
             </p>
           </div>
@@ -100,7 +100,7 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
         <div className="md:hidden">
           <CalendarAgenda state={state} month={month} onOpenDay={openDay} />
         </div>
-        <div className="hidden items-start gap-1.5 text-[10px] text-slate-400 sm:flex">
+        <div className="hidden items-start gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 sm:flex">
           <Sparkles className="mt-0.5 h-3 w-3 shrink-0" />
           Le presenze automatiche sono proposte dal sistema in base alle notti adiacenti. Puoi
           modificarle o escluderle dal dettaglio del giorno.
@@ -111,8 +111,8 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
         <div ref={detailsRef} className="space-y-4 scroll-mt-20 lg:hidden">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Riepilogo e avvisi</h2>
-              <p className="text-[11px] text-slate-500">
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Riepilogo e avvisi</h2>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Dettagli del mese, limiti e controlli automatici.
               </p>
             </div>
@@ -138,26 +138,26 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
 
       <div className="hidden gap-3 sm:grid-cols-3 lg:grid">
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-900">Notte → presenza</div>
-          <p className="mt-1 text-[11px] leading-5 text-slate-500">
+          <div className="text-xs font-semibold text-slate-900 dark:text-slate-50">Notte → presenza</div>
+          <p className="mt-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
             Una notte copre il giorno stesso (arrivo) e il giorno dopo (si dorme lì). Un blocco
-            di <span className="font-medium text-slate-700">k notti</span> produce fino a{' '}
-            <span className="font-medium text-slate-700">k + 1</span> giorni di presenza.
+            di <span className="font-medium text-slate-700 dark:text-slate-300">k notti</span> produce fino a{' '}
+            <span className="font-medium text-slate-700 dark:text-slate-300">k + 1</span> giorni di presenza.
           </p>
         </Card>
         <Card className="p-4">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900">
-            <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500" />
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-slate-50">
+            <ArrowRightLeft className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
             Giorno di passaggio
           </div>
-          <p className="mt-1 text-[11px] leading-5 text-slate-500">
+          <p className="mt-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
             Con A lun–mer e B mer–ven, il mercoledì entrambi sono in ufficio: A parte, B arriva.
             La stanza resta occupata da una persona sola per notte.
           </p>
         </Card>
         <Card className="p-4">
-          <div className="text-xs font-semibold text-slate-900">Calcolo del 50%</div>
-          <p className="mt-1 text-[11px] leading-5 text-slate-500">
+          <div className="text-xs font-semibold text-slate-900 dark:text-slate-50">Calcolo del 50%</div>
+          <p className="mt-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
             Giorni eleggibili = feriali − festivi − assenze. Il massimo di SW è il 50% arrotondato
             per difetto; weekend e assenze non entrano nel calcolo.
           </p>

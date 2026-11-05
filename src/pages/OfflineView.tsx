@@ -40,7 +40,7 @@ export function OfflineView({ controller }: { controller: PlannerController }) {
       />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-4 sm:px-6">
-        <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 sm:flex-row sm:items-center">
+        <div className="flex flex-col gap-2 rounded-xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-xs text-amber-800 dark:text-amber-200 sm:flex-row sm:items-center">
           <WifiOff className="h-4 w-4 shrink-0" />
           <div className="flex-1 leading-5">
             <span className="font-semibold">Sei offline.</span> Stai vedendo l'ultimo piano
@@ -55,14 +55,14 @@ export function OfflineView({ controller }: { controller: PlannerController }) {
         <Card className="mt-4 p-4">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <div className="text-sm font-semibold text-slate-900">
+              <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
                 {formatMonthLabel(month)}
               </div>
-              <div className="text-[10px] text-slate-400">
+              <div className="text-[10px] text-slate-400 dark:text-slate-500">
                 Ultimo piano disponibile offline
               </div>
             </div>
-            <div className="text-[10px] text-slate-400">
+            <div className="text-[10px] text-slate-400 dark:text-slate-500">
               {issues > 0
                 ? `${issues} ${issues === 1 ? 'avviso' : 'avvisi'}`
                 : 'Nessun avviso'}
@@ -80,22 +80,22 @@ export function OfflineView({ controller }: { controller: PlannerController }) {
               return (
                 <div
                   key={personId}
-                  className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-2.5 py-2"
+                  className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 px-2.5 py-2"
                 >
                   <PersonAvatar person={personMetrics.person} size="sm" />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-[11px] font-semibold text-slate-800">
+                    <div className="truncate text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                       {personMetrics.person.name}
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                    <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
                       <span
                         className={cn(
                           'h-1.5 w-1.5 shrink-0 rounded-full',
                           personMetrics.capOk ? 'bg-emerald-500' : 'bg-rose-500',
                         )}
                       />
-                      <span className="font-medium text-slate-700">{sw} SW</span>
-                      <span className="text-slate-400">
+                      <span className="font-medium text-slate-700 dark:text-slate-300">{sw} SW</span>
+                      <span className="text-slate-400 dark:text-slate-500">
                         · {personMetrics.presenceCount}/{personMetrics.eligibleCount}
                       </span>
                     </div>
@@ -110,7 +110,7 @@ export function OfflineView({ controller }: { controller: PlannerController }) {
           <CalendarAgenda state={state} month={month} onOpenDay={() => {}} readOnly />
         </div>
 
-        <div className="mt-3 flex items-start gap-1.5 text-[10px] leading-4 text-slate-400">
+        <div className="mt-3 flex items-start gap-1.5 text-[10px] leading-4 text-slate-400 dark:text-slate-500">
           <Info className="mt-0.5 h-3 w-3 shrink-0" />
           I dati sono una copia locale dell'ultima sincronizzazione. Quando torni online l'app
           ricarica il piano condiviso e riattiva le modifiche.

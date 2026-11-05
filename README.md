@@ -60,6 +60,8 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 - PWA installabile su Android e iPhone, con icona, schermo intero e cache dell'app.
 - Consultazione offline in sola lettura dell'ultimo piano salvato.
 - Layout mobile semplificato: riepilogo compatto, calendario subito visibile e dettagli espandibili.
+- Tema chiaro, scuro o automatico dal sistema, con preferenza per dispositivo.
+- Cambio password dal pannello Sicurezza, con verifica della password attuale.
 
 ## Avvio locale
 
@@ -219,6 +221,27 @@ Sopra il calendario resta solo una striscia compatta con:
 
 Le card complete, gli avvisi estesi, la legenda e le note didattiche sono disponibili dietro **Dettagli** o restano visibili su desktop.
 
+## Tema e sicurezza
+
+### Tema
+
+Il tema può essere **Sistema**, **Chiaro** o **Scuro**:
+
+- icona sole/luna nell'header per il cambio rapido;
+- controllo completo in **Impostazioni → Aspetto**;
+- preferenza salvata solo nel browser (`localStorage`), non condivisa nel cloud;
+- script inline in `index.html` per evitare il flash del tema chiaro all'avvio.
+
+### Cambio password
+
+In **Impostazioni → Sicurezza** è possibile cambiare la password:
+
+1. inserisci la password attuale;
+2. scegli la nuova password (minimo 8 caratteri);
+3. confermala.
+
+L'app verifica la password attuale con Supabase, poi usa `supabase.auth.updateUser({ password })`. La password è gestita da Supabase e non viene mai salvata in chiaro da SmartPlanner. Il form è disabilitato offline e nascosto in modalità locale.
+
 ## Calendario ICS
 
 La scheda **Calendario ICS** offre due modalità per tre calendari:
@@ -256,15 +279,18 @@ In entrambi i casi, i mesi senza notti, assenze o piano confermato esportano sol
 ```text
 src/
   components/
+    account/      cambio password
     calendar/     calendario, agenda mobile, dettaglio giorno, avvisi
     cloud/        login, loading, errore, conflitto locale/cloud
     layout/       header, tab, footer
     pwa/          banner e card di installazione
+    settings/     scelta tema
     summary/      riepiloghi per persona e per mese
     ui/           componenti base (button, card, modal, switch…)
   hooks/
     usePlanner.ts stato applicativo, cloud sync e azioni
     usePwaInstall.ts prompt di installazione e stato standalone
+    useTheme.tsx  tema sistema/chiaro/scuro
   lib/
     cloud.ts          client Supabase, load/save/realtime, errori
     cloud-bootstrap.ts scelta locale/cloud al primo accesso
@@ -297,7 +323,9 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - generazione ICS, escaping e feed stanza;
 - generatore ICS della Edge Function (feed in abbonamento);
 - decisione di bootstrap locale/cloud;
-- schermata offline in sola lettura.
+- schermata offline in sola lettura;
+- applicazione e persistenza del tema;
+- validazione del cambio password.
 
 ## Sicurezza e privacy
 

@@ -58,17 +58,17 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-indigo-100 bg-linear-to-br from-indigo-50/80 via-white to-white p-5 shadow-soft">
+      <div className="rounded-2xl border border-indigo-100 dark:border-indigo-900 bg-linear-to-br from-indigo-50/80 via-white to-white dark:from-indigo-950/40 dark:via-slate-900 dark:to-slate-900 p-5 shadow-soft">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500">
+            <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500 dark:text-indigo-400">
               <Sparkles className="h-3.5 w-3.5" />
               Modello ricorrente
             </div>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
               Settimana tipo
             </h2>
-            <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-slate-400">
               Definisci chi dorme in stanza in ogni notte. L'app calcola automaticamente le
               presenze possibili: una notte copre il giorno stesso e quello successivo. La
               domenica, ad esempio, copre il lunedì.
@@ -82,7 +82,7 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
       </div>
 
       <Card className="overflow-hidden p-0">
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {[1, 2, 3, 4, 5, 6, 7].map((isoDay) => {
             const selected = state.pattern[isoDay] ?? null
             const presence = derivedPresence(state.pattern, isoDay)
@@ -95,11 +95,11 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
                 key={isoDay}
                 className={cn(
                   'grid gap-3 px-4 py-3 sm:grid-cols-[110px_1fr_auto] sm:items-center sm:px-5',
-                  weekend && 'bg-slate-50/60',
+                  weekend && 'bg-slate-50/60 dark:bg-slate-900/60',
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-20 text-xs font-semibold text-slate-700">
+                  <div className="w-20 text-xs font-semibold text-slate-700 dark:text-slate-300">
                     {weekdayName(isoDay)}
                   </div>
                   {weekend ? <Badge variant="neutral">Weekend</Badge> : null}
@@ -116,8 +116,8 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
                         className={cn(
                           'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
                           active
-                            ? 'text-slate-900 shadow-sm'
-                            : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50',
+                            ? 'text-slate-900 dark:text-slate-50 shadow-sm'
+                            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60',
                         )}
                         style={
                           active
@@ -140,11 +140,11 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
                     className={cn(
                       'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
                       selected === null
-                        ? 'border-slate-300 bg-slate-100 text-slate-700'
-                        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50',
+                        ? 'border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60',
                     )}
                   >
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-200">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700">
                       <Moon className="h-2.5 w-2.5" />
                     </span>
                     Libera
@@ -175,16 +175,16 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
                       ) : null}
                     </>
                   ) : (
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
                       {isoDay > 5 ? 'Nessuna presenza lavorativa' : 'Nessuna presenza'}
                     </span>
                   )}
                   {cover.length > 0 ? (
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">
                       copre {cover.map((day) => weekdayName(day, true)).join(' · ')}
                     </span>
                   ) : (
-                    <span className="text-[10px] text-slate-400">non copre feriali</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500">non copre feriali</span>
                   )}
                 </div>
               </div>
@@ -192,8 +192,8 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
           })}
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <div className="text-[10px] leading-4 text-slate-500">
+        <div className="flex flex-col gap-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/60 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="text-[10px] leading-4 text-slate-500 dark:text-slate-400">
             <Info className="mr-1 inline h-3 w-3" />
             Le modifiche alla settimana tipo non cambiano i mesi già pianificati finché non premi
             Applica.
@@ -211,7 +211,7 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
       </Card>
 
       {message ? (
-        <div className="flex items-start gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] text-emerald-700">
+        <div className="flex items-start gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-[11px] text-emerald-700 dark:text-emerald-300">
           <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           {message}
         </div>
@@ -225,7 +225,7 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
             <Card key={person.id} className="p-4">
               <div className="flex items-center gap-2">
                 <PersonAvatar person={person} size="sm" />
-                <div className="text-xs font-semibold text-slate-900">{person.name}</div>
+                <div className="text-xs font-semibold text-slate-900 dark:text-slate-50">{person.name}</div>
                 <Badge variant="neutral" className="ml-auto">
                   settimana tipo
                 </Badge>
@@ -242,10 +242,10 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
                     </span>
                   ))
                 ) : (
-                  <span className="text-[11px] text-slate-400">Nessuna presenza</span>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">Nessuna presenza</span>
                 )}
               </div>
-              <div className="mt-2 text-[11px] text-slate-500">
+              <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                 {presence.length} presenze · {sw.length} giorni di SW in una settimana piena
               </div>
             </Card>
@@ -254,7 +254,7 @@ export function WeeklyPatternView({ controller }: { controller: PlannerControlle
       </div>
 
       {typicalWeek.handover.length > 0 ? (
-        <div className="flex items-start gap-2 rounded-xl border border-indigo-100 bg-indigo-50/60 px-3 py-2.5 text-[11px] leading-5 text-indigo-700">
+        <div className="flex items-start gap-2 rounded-xl border border-indigo-100 dark:border-indigo-900 bg-indigo-50/60 dark:bg-indigo-950/30 px-3 py-2.5 text-[11px] leading-5 text-indigo-700 dark:text-indigo-300">
           <ArrowRightLeft className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
             Giorno di passaggio: {typicalWeek.handover.map((day) => weekdayName(day)).join(', ')}.

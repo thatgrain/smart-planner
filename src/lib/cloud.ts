@@ -100,6 +100,54 @@ export async function signOutFromCloud(): Promise<void> {
   await supabase.auth.signOut()
 }
 
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Supabase non configurato.' }
+
+  const { data, error: userError } = await supabase.auth.getUser()
+  if (userError || !data.user?.email) {
+    const message = userError?.message.toLowerCase() ?? ''
+    if (message.includes('fetch') || message.includes('network')) {
+      return { error: 'Impossibile raggiungere Supabase. Controlla la connessione.' }
+    }
+    return { error: 'Sessione non valida. Esci e accedi di nuovo.' }
+  }
+
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: data.user.email,
+    password: currentPassword,
+  })
+
+  if (verifyError) {
+    const message = verifyError.message.toLowerCase()
+    if (message.includes('fetch') || message.includes('network')) {
+      return { error: 'Impossibile raggiungere Supabase. Controlla la connessione.' }
+    }
+    return { error: 'La password attuale non è corretta.' }
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (!error) return { error: null }
+
+  const message = error.message.toLowerCase()
+  if (message.includes('different from the old password')) {
+    return { error: 'La nuova password deve essere diversa da quella attuale.' }
+  }
+  if (message.includes('at least') || message.includes('password should be')) {
+    return { error: 'La nuova password non rispetta i requisiti minimi di Supabase.' }
+  }
+  if (message.includes('session') || message.includes('jwt')) {
+    return { error: 'Sessione scaduta. Esci e accedi di nuovo.' }
+  }
+  if (message.includes('rate limit')) {
+    return { error: 'Troppi tentativi. Attendi qualche minuto e riprova.' }
+  }
+
+  return { error: error.message }
+}
+
 export async function loadCloudState(): Promise<CloudLoadResult> {
   if (!supabase) return { state: null, updatedAt: null }
 

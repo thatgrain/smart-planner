@@ -54,15 +54,15 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative z-10 flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sp-pop-in sm:max-w-lg sm:rounded-3xl',
+          'relative z-10 flex max-h-[92svh] w-full flex-col overflow-hidden rounded-t-3xl bg-white dark:bg-slate-900 shadow-2xl sp-pop-in sm:max-w-lg sm:rounded-3xl',
           className,
         )}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 px-5 py-4">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-50">{title}</h2>
             {description ? (
-              <p className="mt-1 text-sm leading-5 text-slate-500">{description}</p>
+              <p className="mt-1 text-sm leading-5 text-slate-500 dark:text-slate-400">{description}</p>
             ) : null}
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label="Chiudi">
@@ -71,7 +71,7 @@ export function Modal({
         </div>
         <div className="scrollbar-subtle overflow-y-auto px-5 py-4">{children}</div>
         {footer ? (
-          <div className="flex items-center justify-end gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-3">
+          <div className="flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 px-5 py-3">
             {footer}
           </div>
         ) : null}

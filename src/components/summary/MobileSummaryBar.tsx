@@ -48,22 +48,22 @@ export function MobileSummaryBar({
           return (
             <div
               key={personId}
-              className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-2.5 py-2"
+              className="flex min-w-0 items-center gap-2 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 px-2.5 py-2"
             >
               <PersonAvatar person={personMetrics.person} size="sm" />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[11px] font-semibold text-slate-800">
+                <div className="truncate text-[11px] font-semibold text-slate-800 dark:text-slate-200">
                   {personMetrics.person.name}
                 </div>
-                <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400">
                   <span
                     className={cn(
                       'h-1.5 w-1.5 shrink-0 rounded-full',
                       personMetrics.capOk ? 'bg-emerald-500' : 'bg-rose-500',
                     )}
                   />
-                  <span className="font-medium text-slate-700">{sw} SW</span>
-                  <span className="text-slate-400">
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{sw} SW</span>
+                  <span className="text-slate-400 dark:text-slate-500">
                     · {personMetrics.presenceCount}/{personMetrics.eligibleCount}
                   </span>
                 </div>
@@ -110,7 +110,7 @@ export function MobileSummaryBar({
       </div>
 
       {monthInfo?.confirmedAt && confirmed ? (
-        <div className="mt-1 text-right text-[9px] text-slate-400">
+        <div className="mt-1 text-right text-[9px] text-slate-400 dark:text-slate-500">
           Confermato il{' '}
           {new Intl.DateTimeFormat('it-IT', {
             day: '2-digit',

@@ -46,22 +46,22 @@ function StateCard({
   const cloud = kind === 'cloud'
 
   return (
-    <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5">
+    <div className="flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
       <div className="flex items-center gap-2">
         <span
           className={
             cloud
-              ? 'flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600'
-              : 'flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600'
+              ? 'flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400'
+              : 'flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
           }
         >
           {cloud ? <Cloud className="h-4 w-4" /> : <HardDrive className="h-4 w-4" />}
         </span>
         <div>
-          <div className="text-sm font-semibold text-slate-900">
+          <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">
             {cloud ? 'Piano cloud' : 'Piano locale'}
           </div>
-          <div className="text-[10px] text-slate-400">
+          <div className="text-[10px] text-slate-400 dark:text-slate-500">
             {cloud
               ? updatedAt
                 ? `Ultimo aggiornamento: ${dateTimeFormatter.format(new Date(updatedAt))}`
@@ -75,23 +75,23 @@ function StateCard({
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2">
-        <div className="rounded-xl bg-slate-50 px-2.5 py-2">
-          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-slate-400">
+        <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 px-2.5 py-2">
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
             <Moon className="h-3 w-3" /> Notti
           </div>
-          <div className="text-sm font-semibold text-slate-900">{data.nights}</div>
+          <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">{data.nights}</div>
         </div>
-        <div className="rounded-xl bg-slate-50 px-2.5 py-2">
-          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-slate-400">
+        <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 px-2.5 py-2">
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
             <Building2 className="h-3 w-3" /> Presenze
           </div>
-          <div className="text-sm font-semibold text-slate-900">{data.presence}</div>
+          <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">{data.presence}</div>
         </div>
-        <div className="rounded-xl bg-slate-50 px-2.5 py-2">
-          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-slate-400">
+        <div className="rounded-xl bg-slate-50 dark:bg-slate-800/50 px-2.5 py-2">
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
             <Umbrella className="h-3 w-3" /> Assenze
           </div>
-          <div className="text-sm font-semibold text-slate-900">{data.absences}</div>
+          <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">{data.absences}</div>
         </div>
       </div>
 
@@ -135,13 +135,13 @@ export function CloudConflictScreen({
     <div className="flex min-h-svh items-center justify-center px-4 py-10">
       <div className="w-full max-w-3xl">
         <div className="mb-6 text-center">
-          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/15">
+          <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/15 dark:bg-indigo-600 dark:shadow-indigo-950/30">
             <CalendarDays className="h-5 w-5" />
           </div>
-          <h1 className="mt-3 text-xl font-semibold tracking-tight text-slate-900">
+          <h1 className="mt-3 text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
             Quale piano vuoi usare?
           </h1>
-          <p className="mx-auto mt-1 max-w-lg text-xs leading-5 text-slate-500">
+          <p className="mx-auto mt-1 max-w-lg text-xs leading-5 text-slate-500 dark:text-slate-400">
             Questo browser ha un piano locale, mentre il cloud ne contiene già uno. Scegli quale
             tenere: l'opzione selezionata sovrascrive l'altra.
           </p>
@@ -164,13 +164,13 @@ export function CloudConflictScreen({
         </div>
 
         {error ? (
-          <div className="mt-4 flex items-start gap-2 rounded-xl bg-rose-50 px-3 py-2.5 text-[11px] leading-5 text-rose-700">
+          <div className="mt-4 flex items-start gap-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2.5 text-[11px] leading-5 text-rose-700 dark:text-rose-300">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             <span>{error}</span>
           </div>
         ) : null}
 
-        <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2.5 text-[11px] leading-5 text-amber-700">
+        <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 px-3 py-2.5 text-[11px] leading-5 text-amber-700 dark:text-amber-300">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
             Il piano cloud è condiviso con Pietro. Se scegli il piano locale, il piano cloud

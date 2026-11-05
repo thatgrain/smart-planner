@@ -23,7 +23,7 @@ export function PersonAvatar({
       title={person.name}
       style={{ backgroundColor: person.color }}
       className={cn(
-        'inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white shadow-sm ring-2 ring-white',
+        'inline-flex shrink-0 items-center justify-center rounded-full font-semibold text-white shadow-sm ring-2 ring-white dark:ring-slate-900',
         sizes[size],
         className,
       )}

@@ -94,7 +94,7 @@ export default function App() {
 
       {cloud.active && cloud.ready && cloud.syncError ? (
         <div className="mx-auto w-full max-w-[1400px] px-4 pt-3 sm:px-6">
-          <div className="flex flex-col gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 px-4 py-3 text-xs text-rose-700 dark:text-rose-300 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>
@@ -117,14 +117,14 @@ export default function App() {
 
       {cloud.active && cloud.message ? (
         <div className="mx-auto w-full max-w-[1400px] px-4 pt-3 sm:px-6">
-          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-700">
+          <div className="flex items-center gap-2 rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2.5 text-xs text-emerald-700 dark:text-emerald-300">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
             <span className="flex-1">{cloud.message}</span>
             <button
               type="button"
               onClick={cloud.dismissMessage}
               aria-label="Chiudi messaggio"
-              className="rounded-lg p-1 text-emerald-600 transition hover:bg-emerald-100"
+              className="rounded-lg p-1 text-emerald-600 dark:text-emerald-400 transition hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
             >
               <X className="h-3.5 w-3.5" />
             </button>

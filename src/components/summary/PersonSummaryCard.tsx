@@ -12,12 +12,12 @@ const numberFormatter = new Intl.NumberFormat('it-IT', {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className="rounded-xl bg-slate-50/80 px-2.5 py-2">
-      <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+    <div className="rounded-xl bg-slate-50/80 dark:bg-slate-900/80 px-2.5 py-2">
+      <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
         {label}
       </div>
-      <div className="mt-0.5 text-sm font-semibold text-slate-900">{value}</div>
-      {hint ? <div className="text-[10px] text-slate-400">{hint}</div> : null}
+      <div className="mt-0.5 text-sm font-semibold text-slate-900 dark:text-slate-50">{value}</div>
+      {hint ? <div className="text-[10px] text-slate-400 dark:text-slate-500">{hint}</div> : null}
     </div>
   )
 }
@@ -38,8 +38,8 @@ export function PersonSummaryCard({ metrics }: { metrics: PersonMetrics }) {
           <div className="flex items-center gap-3">
             <PersonAvatar person={person} size="lg" />
             <div>
-              <div className="text-sm font-semibold text-slate-900">{person.name}</div>
-              <div className="text-[11px] text-slate-500">
+              <div className="text-sm font-semibold text-slate-900 dark:text-slate-50">{person.name}</div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400">
                 Persona {person.id} · {metrics.nightCount} notti
               </div>
             </div>
@@ -51,22 +51,22 @@ export function PersonSummaryCard({ metrics }: { metrics: PersonMetrics }) {
 
         <div className="mt-5 flex items-end justify-between gap-3">
           <div>
-            <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">
+            <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">
               Smart working
             </div>
-            <div className="mt-0.5 text-3xl font-semibold tracking-tight text-slate-900">
+            <div className="mt-0.5 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
               {swLabel}
             </div>
           </div>
-          <div className="text-right text-[11px] leading-5 text-slate-500">
+          <div className="text-right text-[11px] leading-5 text-slate-500 dark:text-slate-400">
             <div>
-              <span className="font-semibold text-slate-700">{metrics.smartCount}</span> giorni SW
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{metrics.smartCount}</span> giorni SW
             </div>
             <div>
-              <span className="font-semibold text-slate-700">{metrics.presenceCount}</span> presenze
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{metrics.presenceCount}</span> presenze
             </div>
             <div>
-              limite <span className="font-semibold text-slate-700">{maxLabel}</span>
+              limite <span className="font-semibold text-slate-700 dark:text-slate-300">{maxLabel}</span>
             </div>
           </div>
         </div>
@@ -78,7 +78,7 @@ export function PersonSummaryCard({ metrics }: { metrics: PersonMetrics }) {
             color={person.color}
             over={!metrics.capOk}
           />
-          <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400">
+          <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500">
             <span>0%</span>
             <span>50% massimo</span>
             <span>100%</span>
@@ -96,12 +96,12 @@ export function PersonSummaryCard({ metrics }: { metrics: PersonMetrics }) {
 
         <div className="mt-4 space-y-2">
           {!hasEligibleDays ? (
-            <div className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+            <div className="flex items-start gap-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-[11px] text-slate-500 dark:text-slate-400">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               Nessun giorno eleggibile in questo mese.
             </div>
           ) : metrics.capOk ? (
-            <div className="flex items-start gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-[11px] text-emerald-700">
+            <div className="flex items-start gap-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 px-3 py-2 text-[11px] text-emerald-700 dark:text-emerald-300">
               <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {metrics.margin === 0
@@ -112,7 +112,7 @@ export function PersonSummaryCard({ metrics }: { metrics: PersonMetrics }) {
               </span>
             </div>
           ) : (
-            <div className="flex items-start gap-2 rounded-xl bg-rose-50 px-3 py-2 text-[11px] text-rose-700">
+            <div className="flex items-start gap-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-[11px] text-rose-700 dark:text-rose-300">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 Superato di {metrics.smartCount - metrics.maxSmartDays}{' '}
@@ -123,7 +123,7 @@ export function PersonSummaryCard({ metrics }: { metrics: PersonMetrics }) {
           )}
 
           {metrics.wastedNights.length > 0 ? (
-            <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-3 py-2 text-[11px] text-amber-700">
+            <div className="flex items-start gap-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-[11px] text-amber-700 dark:text-amber-300">
               <Moon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <span>
                 {metrics.wastedNights.length}{' '}
@@ -136,8 +136,8 @@ export function PersonSummaryCard({ metrics }: { metrics: PersonMetrics }) {
             className={cn(
               'flex items-start gap-2 rounded-xl px-3 py-2 text-[11px]',
               metrics.exceptionPresenceDays.length > 0
-                ? 'bg-sky-50 text-sky-700'
-                : 'bg-slate-50 text-slate-500',
+                ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300'
+                : 'bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400',
             )}
           >
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
