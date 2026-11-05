@@ -41,17 +41,29 @@ const CLOUD_LINKED_KEY = `smartplanner.cloud.${projectRef}.linked.v1`
 
 export function isCloudLinked(): boolean {
   if (typeof window === 'undefined') return false
-  return window.localStorage.getItem(CLOUD_LINKED_KEY) === '1'
+  try {
+    return window.localStorage.getItem(CLOUD_LINKED_KEY) === '1'
+  } catch {
+    return false
+  }
 }
 
 export function markCloudLinked(): void {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(CLOUD_LINKED_KEY, '1')
+  try {
+    window.localStorage.setItem(CLOUD_LINKED_KEY, '1')
+  } catch {
+    // Ignore storage errors.
+  }
 }
 
 export function unmarkCloudLinked(): void {
   if (typeof window === 'undefined') return
-  window.localStorage.removeItem(CLOUD_LINKED_KEY)
+  try {
+    window.localStorage.removeItem(CLOUD_LINKED_KEY)
+  } catch {
+    // Ignore storage errors.
+  }
 }
 
 export async function getSession(): Promise<Session | null> {

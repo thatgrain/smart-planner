@@ -46,7 +46,11 @@ export function normaliseState(state: PlannerState): PlannerState {
 
 export function hasStoredState(): boolean {
   if (typeof window === 'undefined') return false
-  return Boolean(window.localStorage.getItem(STORAGE_KEY))
+  try {
+    return Boolean(window.localStorage.getItem(STORAGE_KEY))
+  } catch {
+    return false
+  }
 }
 
 export function loadState(): PlannerState {
@@ -75,7 +79,11 @@ export function saveState(state: PlannerState): void {
 
 export function clearStoredState(): void {
   if (typeof window === 'undefined') return
-  window.localStorage.removeItem(STORAGE_KEY)
+  try {
+    window.localStorage.removeItem(STORAGE_KEY)
+  } catch {
+    // Ignore storage errors.
+  }
 }
 
 export function resetToDemoState(): PlannerState {

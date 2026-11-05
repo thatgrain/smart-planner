@@ -123,6 +123,7 @@ export function usePlanner() {
   const skipNextCloudSave = useRef(false)
   const lastRemoteUpdatedAt = useRef<string | null>(null)
   const bootstrappedUserId = useRef<string | null>(null)
+  const hadLocalStateAtMount = useRef(hasStoredState())
 
   const cloudActive = isSupabaseConfigured && !forceLocal
   const sessionUserId = session?.user.id ?? null
@@ -131,10 +132,13 @@ export function usePlanner() {
     stateRef.current = state
   }, [state])
 
-  // Local cache: always keep a copy in the browser (also useful for offline/backup).
+  // Local cache: keep a copy in the browser (also useful for offline/backup).
+  // Before the first cloud bootstrap, do not persist the auto-generated initial
+  // state on a fresh browser, otherwise it would look like a real local plan.
   useEffect(() => {
+    if (cloudActive && !cloudReady && !hadLocalStateAtMount.current) return
     saveState(state)
-  }, [state])
+  }, [cloudActive, cloudReady, state])
 
   const applyRemote = useCallback((remoteState: PlannerState, updatedAt: string | null) => {
     lastRemoteUpdatedAt.current = updatedAt
