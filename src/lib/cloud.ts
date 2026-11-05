@@ -100,6 +100,87 @@ export async function signOutFromCloud(): Promise<void> {
   await supabase.auth.signOut()
 }
 
+export async function requestPasswordReset(
+  email: string,
+): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Supabase non configurato.' }
+
+  const redirectTo = `${window.location.origin}${window.location.pathname}`
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo })
+
+  if (!error) return { error: null }
+
+  const message = error.message.toLowerCase()
+  if (message.includes('user not found')) return { error: null }
+  if (
+    message.includes('email_address_not_authorized') ||
+    message.includes('error sending recovery email') ||
+    message.includes('smtp')
+  ) {
+    return {
+      error:
+        'Invio email non configurato. Configura un provider SMTP in Supabase (vedi README) e riprova.',
+    }
+  }
+  if (message.includes('rate limit') || message.includes('after')) {
+    return {
+      error:
+        'Per motivi di sicurezza, attendi qualche minuto prima di richiedere un altro link.',
+    }
+  }
+  if (message.includes('fetch') || message.includes('network')) {
+    return { error: 'Impossibile raggiungere Supabase. Controlla la connessione.' }
+  }
+
+  return { error: error.message }
+}
+
+export async function updatePasswordWithRecovery(
+  newPassword: string,
+): Promise<{ error: string | null }> {
+  if (!supabase) return { error: 'Supabase non configurato.' }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (!error) return { error: null }
+
+  const message = error.message.toLowerCase()
+  if (message.includes('different from the old password')) {
+    return { error: 'La nuova password deve essere diversa da quella precedente.' }
+  }
+  if (message.includes('at least') || message.includes('password should be')) {
+    return { error: 'La nuova password non rispetta i requisiti minimi di Supabase.' }
+  }
+  if (message.includes('session') || message.includes('jwt')) {
+    return { error: 'Il link di recupero è scaduto. Richiedine uno nuovo.' }
+  }
+  if (message.includes('rate limit')) {
+    return { error: 'Troppi tentativi. Attendi qualche minuto e riprova.' }
+  }
+  if (message.includes('fetch') || message.includes('network')) {
+    return { error: 'Impossibile raggiungere Supabase. Controlla la connessione.' }
+  }
+
+  return { error: error.message }
+}
+
+export async function revokeOtherSessions(): Promise<void> {
+  if (!supabase) return
+  try {
+    await supabase.auth.signOut({ scope: 'others' })
+  } catch {
+    // Ignore: the password has already been updated.
+  }
+}
+
+export function clearAuthUrl(): void {
+  if (typeof window === 'undefined') return
+  window.history.replaceState(
+    null,
+    '',
+    `${window.location.origin}${window.location.pathname}`,
+  )
+}
+
 export async function changePassword(
   currentPassword: string,
   newPassword: string,

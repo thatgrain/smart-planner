@@ -32,20 +32,29 @@ import type {
   PlannerTab,
 } from '../lib/domain/types'
 import {
+  clearAuthUrl,
   formatCloudError,
   getSession,
   isCloudLinked,
   loadCloudState,
   markCloudLinked,
+  requestPasswordReset,
+  revokeOtherSessions,
   saveCloudState,
   signInWithEmail,
   signOutFromCloud,
   subscribeToCloudState,
+  updatePasswordWithRecovery,
   type CloudErrorInfo,
   type SyncStatus,
 } from '../lib/cloud'
 import { decideBootstrap } from '../lib/cloud-bootstrap'
-import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import {
+  isRecoveryError,
+  isRecoveryLink,
+  isSupabaseConfigured,
+  supabase,
+} from '../lib/supabase'
 import {
   clearStoredState,
   hasStoredState,
@@ -83,8 +92,14 @@ export interface CloudController {
   message: string | null
   forceLocal: boolean
   offline: boolean
+  recovery: boolean
+  recoveryError: string | null
+  loginNotice: string | null
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
+  requestReset: (email: string) => Promise<{ error: string | null }>
+  completeRecovery: (newPassword: string) => Promise<{ error: string | null }>
+  cancelRecovery: () => Promise<void>
   retry: () => void
   resolveConflict: (choice: 'cloud' | 'local') => Promise<void>
   continueLocally: () => void
@@ -124,6 +139,13 @@ export function usePlanner() {
     return !navigator.onLine && hasStoredState()
   })
   const [authRetryKey, setAuthRetryKey] = useState(0)
+  const [recovery, setRecovery] = useState(isRecoveryLink || isRecoveryError)
+  const [recoveryError, setRecoveryError] = useState<string | null>(
+    isRecoveryError
+      ? 'Il link di recupero non è valido o è scaduto. Richiedine uno nuovo.'
+      : null,
+  )
+  const [loginNotice, setLoginNotice] = useState<string | null>(null)
 
   const stateRef = useRef(state)
   const skipNextCloudSave = useRef(false)
@@ -252,8 +274,14 @@ export function usePlanner() {
         setSyncStatus('error')
       })
 
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession)
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecovery(true)
+        setRecoveryError(null)
+      }
+
       if (!nextSession) {
         setCloudReady(false)
         setConflict(null)
@@ -471,6 +499,9 @@ export function usePlanner() {
     setOffline(false)
     setCloudError(null)
     setSyncError(null)
+    setLoginNotice(null)
+    setRecovery(false)
+    setRecoveryError(null)
     return signInWithEmail(email, password)
   }, [])
 
@@ -479,6 +510,9 @@ export function usePlanner() {
     clearStoredState()
     setSession(null)
     setOffline(false)
+    setRecovery(false)
+    setRecoveryError(null)
+    setLoginNotice(null)
     setCloudReady(false)
     setConflict(null)
     setCloudError(null)
@@ -488,6 +522,64 @@ export function usePlanner() {
     bootstrappedUserId.current = null
     setTab('calendar')
     setSelectedDate(null)
+  }, [])
+
+  const handleRequestReset = useCallback(async (email: string) => {
+    setLoginNotice(null)
+    return requestPasswordReset(email)
+  }, [])
+
+  const handleCompleteRecovery = useCallback(async (newPassword: string) => {
+    setRecoveryError(null)
+
+    const result = await updatePasswordWithRecovery(newPassword)
+    if (result.error) {
+      return result
+    }
+
+    await revokeOtherSessions()
+    try {
+      await signOutFromCloud()
+    } catch {
+      // The password is already updated; proceed with the local cleanup.
+    }
+
+    clearAuthUrl()
+    setRecovery(false)
+    setRecoveryError(null)
+    setSession(null)
+    setOffline(false)
+    setCloudReady(false)
+    setCloudError(null)
+    setSyncError(null)
+    setSyncStatus('local')
+    setCloudMessage(null)
+    setLoginNotice('Password aggiornata. Accedi con la nuova password.')
+    setTab('calendar')
+    setSelectedDate(null)
+    bootstrappedUserId.current = null
+
+    return { error: null }
+  }, [])
+
+  const handleCancelRecovery = useCallback(async () => {
+    try {
+      await signOutFromCloud()
+    } catch {
+      // Best effort: the important part is clearing the local recovery state.
+    }
+
+    clearAuthUrl()
+    setRecovery(false)
+    setRecoveryError(null)
+    setSession(null)
+    setOffline(false)
+    setCloudReady(false)
+    setCloudError(null)
+    setSyncError(null)
+    setSyncStatus('local')
+    setCloudMessage(null)
+    bootstrappedUserId.current = null
   }, [])
 
   const resolveConflict = useCallback(
@@ -610,8 +702,14 @@ export function usePlanner() {
     message: cloudMessage,
     forceLocal,
     offline,
+    recovery,
+    recoveryError,
+    loginNotice,
     signIn: handleSignIn,
     signOut: handleSignOut,
+    requestReset: handleRequestReset,
+    completeRecovery: handleCompleteRecovery,
+    cancelRecovery: handleCancelRecovery,
     retry,
     resolveConflict,
     continueLocally,

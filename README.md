@@ -62,6 +62,7 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 - Layout mobile semplificato: riepilogo compatto, calendario subito visibile e dettagli espandibili.
 - Tema chiaro, scuro o automatico dal sistema, con preferenza per dispositivo.
 - Cambio password dal pannello Sicurezza, con verifica della password attuale.
+- Recupero password tramite email con link monouso Supabase.
 
 ## Avvio locale
 
@@ -162,6 +163,36 @@ La function:
 
 Se la function non è deployata, l'anteprima del feed restituisce `404`.
 
+### 6. SMTP e recupero password
+
+Il reset password usa le email di Supabase Auth. L'email integrata di Supabase **non è affidabile**:
+
+- 2 email/ora per progetto;
+- invia solo a indirizzi autorizzati del team;
+- non garantisce consegna.
+
+Per usare il recupero con entrambi gli account serve un **SMTP personalizzato**. Consigliamo **Brevo** (free, circa 300 email/giorno, mittente verificabile senza dominio):
+
+1. crea un account Brevo;
+2. verifica l'indirizzo mittente;
+3. genera una SMTP key;
+4. in Supabase: **Authentication → Emails → SMTP Settings → Enable custom SMTP**:
+   - Host: `smtp-relay.brevo.com`
+   - Porta: `587` (STARTTLS) o `465` (SSL)
+   - Username: email account Brevo
+   - Password: SMTP key
+   - Sender email: indirizzo verificato
+   - Sender name: `SmartPlanner`
+
+Poi configura gli URL in **Authentication → URL Configuration**:
+
+- **Site URL:** `https://thatgrain.github.io/smart-planner/`
+- **Redirect URLs:**
+  - `https://thatgrain.github.io/smart-planner/**`
+  - `http://localhost:5173/**`
+
+Il template **Reset Password** può restare quello di default. Il link scade secondo le impostazioni Supabase ed è monouso.
+
 ## Primo accesso e sincronizzazione
 
 Al primo login:
@@ -242,6 +273,26 @@ In **Impostazioni → Sicurezza** è possibile cambiare la password:
 
 L'app verifica la password attuale con Supabase, poi usa `supabase.auth.updateUser({ password })`. La password è gestita da Supabase e non viene mai salvata in chiaro da SmartPlanner. Il form è disabilitato offline e nascosto in modalità locale.
 
+### Recupero password
+
+Dalla schermata di login:
+
+1. **Password dimenticata?**
+2. inserisci l'email;
+3. ricevi un link monouso;
+4. il link riapre SmartPlanner sulla schermata **Imposta nuova password**;
+5. dopo il salvataggio, l'app disconnette la sessione di recovery e le altre sessioni, poi torna al login.
+
+L'app usa `resetPasswordForEmail` e gestisce l'evento `PASSWORD_RECOVERY` di Supabase. Il link scade secondo le impostazioni Supabase, funziona una sola volta e non rivela se l'email è registrata.
+
+Per funzionare serve:
+
+- SMTP configurato (vedi **Configurazione Supabase → 6. SMTP**);
+- Site URL e Redirect URLs corretti;
+- `detectSessionInUrl` attivo nel client Supabase.
+
+Se l'SMTP non è configurato, il form mostra un errore chiaro e nessuna email viene inviata.
+
 ## Calendario ICS
 
 La scheda **Calendario ICS** offre due modalità per tre calendari:
@@ -281,7 +332,7 @@ src/
   components/
     account/      cambio password
     calendar/     calendario, agenda mobile, dettaglio giorno, avvisi
-    cloud/        login, loading, errore, conflitto locale/cloud
+    cloud/        login, reset password, loading, errore, conflitto locale/cloud
     layout/       header, tab, footer
     pwa/          banner e card di installazione
     settings/     scelta tema
@@ -325,7 +376,8 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - decisione di bootstrap locale/cloud;
 - schermata offline in sola lettura;
 - applicazione e persistenza del tema;
-- validazione del cambio password.
+- validazione del cambio password;
+- richiesta del link di recupero e reset della password.
 
 ## Sicurezza e privacy
 
