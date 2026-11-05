@@ -18,12 +18,14 @@ import {
   Settings2,
   Upload,
   UserRound,
+  WifiOff,
 } from 'lucide-react'
 import type { PlannerController } from '../hooks/usePlanner'
 import { cn } from '../lib/cn'
 import { formatMonthLabel, todayKey, weekdayName } from '../lib/domain/dates'
 import { serialiseState } from '../lib/storage'
 import { downloadTextFile } from '../lib/download'
+import { InstallCard } from '../components/pwa/InstallCard'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -104,20 +106,24 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
                       ? 'neutral'
                       : cloud.syncStatus === 'error'
                         ? 'danger'
-                        : cloud.syncStatus === 'saving' || cloud.syncStatus === 'loading'
+                        : cloud.offline || cloud.syncStatus === 'offline'
                           ? 'warning'
-                          : 'success'
+                          : cloud.syncStatus === 'saving' || cloud.syncStatus === 'loading'
+                            ? 'warning'
+                            : 'success'
                   }
                 >
                   {!cloud.active
                     ? 'Locale'
                     : cloud.syncStatus === 'error'
                       ? 'Errore'
-                      : cloud.syncStatus === 'saving'
-                        ? 'Salvataggio…'
-                        : cloud.syncStatus === 'loading'
-                          ? 'Connessione…'
-                          : 'Sincronizzato'}
+                      : cloud.offline || cloud.syncStatus === 'offline'
+                        ? 'Offline'
+                        : cloud.syncStatus === 'saving'
+                          ? 'Salvataggio…'
+                          : cloud.syncStatus === 'loading'
+                            ? 'Connessione…'
+                            : 'Sincronizzato'}
                 </Badge>
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
@@ -142,7 +148,7 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
                   variant="secondary"
                   size="sm"
                   onClick={() => void cloud.syncNow()}
-                  disabled={!cloud.ready || cloud.syncStatus === 'saving'}
+                  disabled={cloud.offline || !cloud.ready || cloud.syncStatus === 'saving'}
                 >
                   {cloud.syncStatus === 'saving' ? (
                     <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
@@ -155,7 +161,7 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
                   variant="secondary"
                   size="sm"
                   onClick={() => void cloud.reloadCloud()}
-                  disabled={!cloud.ready}
+                  disabled={cloud.offline || !cloud.ready}
                 >
                   <Cloud className="h-3.5 w-3.5" />
                   Ricarica dal cloud
@@ -190,7 +196,12 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
         ) : null}
 
         <div className="mt-3 flex items-center gap-1.5 text-[10px] text-slate-400">
-          {cloud.active ? (
+          {cloud.offline ? (
+            <>
+              <WifiOff className="h-3 w-3 text-amber-500" />
+              Modalità offline: stai vedendo l'ultimo piano salvato.
+            </>
+          ) : cloud.active ? (
             <>
               <CheckCircle2 className="h-3 w-3 text-emerald-500" />
               Le modifiche vengono sincronizzate in tempo reale con Pietro.
@@ -203,6 +214,8 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
           )}
         </div>
       </Card>
+
+      <InstallCard />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">

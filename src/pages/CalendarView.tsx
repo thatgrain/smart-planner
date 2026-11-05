@@ -1,4 +1,5 @@
-import { ArrowRightLeft, CalendarOff, Repeat2, Sparkles } from 'lucide-react'
+import { useRef, useState } from 'react'
+import { ArrowRightLeft, CalendarOff, Repeat2, Sparkles, X } from 'lucide-react'
 import type { PlannerController } from '../hooks/usePlanner'
 import { formatMonthLabel } from '../lib/domain/dates'
 import { CalendarAgenda } from '../components/calendar/CalendarAgenda'
@@ -6,21 +7,34 @@ import { DayDrawer } from '../components/calendar/DayDrawer'
 import { Legend } from '../components/calendar/Legend'
 import { MonthGrid } from '../components/calendar/MonthGrid'
 import { WarningsPanel } from '../components/calendar/WarningsPanel'
+import { MobileSummaryBar } from '../components/summary/MobileSummaryBar'
 import { SummaryCards } from '../components/summary/SummaryCards'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 
 export function CalendarView({ controller }: { controller: PlannerController }) {
   const { state, month, metrics, selectedDate, openDay, closeDay, actions, setTab } = controller
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const detailsRef = useRef<HTMLDivElement>(null)
   const monthInfo = state.months.find((info) => info.month === month)
 
   const showWarnings = () => {
     document.getElementById('warnings-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
+  const toggleDetails = () => {
+    const next = !detailsOpen
+    setDetailsOpen(next)
+    if (next) {
+      window.setTimeout(() => {
+        detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 80)
+    }
+  }
+
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 rounded-2xl border border-indigo-100 bg-linear-to-br from-indigo-50/80 via-white to-white p-5 shadow-soft sm:flex-row sm:items-center sm:justify-between">
+      <div className="hidden rounded-2xl border border-indigo-100 bg-linear-to-br from-indigo-50/80 via-white to-white p-5 shadow-soft lg:flex lg:flex-row lg:items-center lg:justify-between lg:gap-4">
         <div>
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-500">
             Piano del mese
@@ -45,16 +59,28 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
         </div>
       </div>
 
-      <SummaryCards
-        metrics={metrics}
-        monthInfo={monthInfo}
-        onConfirm={actions.confirmMonth}
-        onReopen={actions.reopenMonth}
-        onShowWarnings={showWarnings}
-      />
+      <div className="lg:hidden">
+        <MobileSummaryBar
+          metrics={metrics}
+          monthInfo={monthInfo}
+          detailsOpen={detailsOpen}
+          onToggleDetails={toggleDetails}
+          onConfirm={actions.confirmMonth}
+        />
+      </div>
+
+      <div className="hidden lg:block">
+        <SummaryCards
+          metrics={metrics}
+          monthInfo={monthInfo}
+          onConfirm={actions.confirmMonth}
+          onReopen={actions.reopenMonth}
+          onShowWarnings={showWarnings}
+        />
+      </div>
 
       <div className="space-y-2">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="hidden flex-col gap-2 md:flex md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Calendario</h2>
             <p className="text-[11px] text-slate-500">
@@ -74,16 +100,43 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
         <div className="md:hidden">
           <CalendarAgenda state={state} month={month} onOpenDay={openDay} />
         </div>
-        <div className="flex items-start gap-1.5 text-[10px] text-slate-400">
+        <div className="hidden items-start gap-1.5 text-[10px] text-slate-400 sm:flex">
           <Sparkles className="mt-0.5 h-3 w-3 shrink-0" />
           Le presenze automatiche sono proposte dal sistema in base alle notti adiacenti. Puoi
           modificarle o escluderle dal dettaglio del giorno.
         </div>
       </div>
 
-      <WarningsPanel warnings={metrics.warnings} onOpenDay={openDay} />
+      {detailsOpen ? (
+        <div ref={detailsRef} className="space-y-4 scroll-mt-20 lg:hidden">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Riepilogo e avvisi</h2>
+              <p className="text-[11px] text-slate-500">
+                Dettagli del mese, limiti e controlli automatici.
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={toggleDetails}>
+              <X className="h-3.5 w-3.5" />
+              Chiudi
+            </Button>
+          </div>
+          <SummaryCards
+            metrics={metrics}
+            monthInfo={monthInfo}
+            onConfirm={actions.confirmMonth}
+            onReopen={actions.reopenMonth}
+            onShowWarnings={showWarnings}
+          />
+          <WarningsPanel warnings={metrics.warnings} onOpenDay={openDay} />
+        </div>
+      ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="hidden lg:block">
+        <WarningsPanel warnings={metrics.warnings} onOpenDay={openDay} />
+      </div>
+
+      <div className="hidden gap-3 sm:grid-cols-3 lg:grid">
         <Card className="p-4">
           <div className="text-xs font-semibold text-slate-900">Notte → presenza</div>
           <p className="mt-1 text-[11px] leading-5 text-slate-500">

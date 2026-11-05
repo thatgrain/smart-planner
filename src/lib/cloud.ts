@@ -29,7 +29,7 @@ export interface CloudErrorInfo {
   canRetry: boolean
 }
 
-export type SyncStatus = 'local' | 'loading' | 'saving' | 'saved' | 'error'
+export type SyncStatus = 'local' | 'loading' | 'saving' | 'saved' | 'error' | 'offline'
 
 interface PlannerStateRow {
   data: unknown

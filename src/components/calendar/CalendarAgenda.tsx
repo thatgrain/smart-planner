@@ -44,10 +44,12 @@ export function CalendarAgenda({
   state,
   month,
   onOpenDay,
+  readOnly = false,
 }: {
   state: PlannerState
   month: string
   onOpenDay: (date: string) => void
+  readOnly?: boolean
 }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft">
@@ -84,17 +86,15 @@ export function CalendarAgenda({
           ]
           const showFreeNight = !weekend && !holiday && collective.length === 0
 
-          return (
-            <button
-              key={date}
-              type="button"
-              onClick={() => onOpenDay(date)}
-              className={cn(
-                'flex w-full items-start gap-3 px-3 py-3 text-left transition hover:bg-slate-50',
-                weekend && 'bg-slate-50/60',
-                holiday && 'bg-rose-50/50',
-              )}
-            >
+          const rowClassName = cn(
+            'flex w-full items-start gap-3 px-3 py-3 text-left transition',
+            !readOnly && 'hover:bg-slate-50',
+            weekend && 'bg-slate-50/60',
+            holiday && 'bg-rose-50/50',
+          )
+
+          const content = (
+            <>
               <div className="w-10 shrink-0 text-center">
                 <div
                   className={cn(
@@ -196,7 +196,24 @@ export function CalendarAgenda({
                 ) : null}
               </div>
 
-              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
+              {!readOnly ? (
+                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
+              ) : null}
+            </>
+          )
+
+          return readOnly ? (
+            <div key={date} className={rowClassName}>
+              {content}
+            </div>
+          ) : (
+            <button
+              key={date}
+              type="button"
+              onClick={() => onOpenDay(date)}
+              className={rowClassName}
+            >
+              {content}
             </button>
           )
         })}

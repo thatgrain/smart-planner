@@ -1,8 +1,9 @@
-import { Cloud, HardDrive, LoaderCircle } from 'lucide-react'
+import { Cloud, HardDrive, LoaderCircle, WifiOff } from 'lucide-react'
 import type { CloudController } from '../../hooks/usePlanner'
 
 function statusLabel(cloud: CloudController): string {
   if (!cloud.active) return 'Locale · dati solo in questo browser'
+  if (cloud.offline || cloud.syncStatus === 'offline') return 'Offline · ultimo piano salvato'
   if (cloud.syncStatus === 'saving') return 'Cloud · salvataggio…'
   if (cloud.syncStatus === 'error') return 'Cloud · errore di sincronizzazione'
   if (cloud.syncStatus === 'loading') return 'Cloud · connessione…'
@@ -17,7 +18,9 @@ export function Footer({ cloud }: { cloud: CloudController }) {
         <span>SmartPlanner · pianificazione condivisa della stanza</span>
         <span className="inline-flex items-center gap-1.5" title={cloud.sessionEmail ?? undefined}>
           {active ? (
-            cloud.syncStatus === 'saving' || cloud.syncStatus === 'loading' ? (
+            cloud.offline || cloud.syncStatus === 'offline' ? (
+              <WifiOff className="h-3.5 w-3.5" />
+            ) : cloud.syncStatus === 'saving' || cloud.syncStatus === 'loading' ? (
               <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <Cloud className="h-3.5 w-3.5" />

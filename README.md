@@ -57,7 +57,9 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 - Salvataggio locale di cache/backup e esportazione/importazione JSON.
 - Download `.ics` per i calendari personali e per il calendario della stanza.
 - Feed ICS in abbonamento con URL segreto e rotazione del token.
-- Layout responsive: griglia su desktop, agenda giornaliera su mobile.
+- PWA installabile su Android e iPhone, con icona, schermo intero e cache dell'app.
+- Consultazione offline in sola lettura dell'ultimo piano salvato.
+- Layout mobile semplificato: riepilogo compatto, calendario subito visibile e dettagli espandibili.
 
 ## Avvio locale
 
@@ -85,6 +87,8 @@ npm run lint    # oxlint
 npm run build   # typecheck + build di produzione
 npm run preview # anteprima della build
 ```
+
+Manifest e service worker vengono generati solo con `npm run build`; in sviluppo il service worker è disattivato per evitare cache indesiderate.
 
 ## Configurazione Supabase
 
@@ -183,6 +187,38 @@ Procedura:
 
 I test e il lint vengono eseguiti prima del deploy: se falliscono, il sito non viene aggiornato.
 
+## PWA e mobile
+
+L'app è una **Progressive Web App** generata con `vite-plugin-pwa`.
+
+### Installazione
+
+- **Android / Chrome:** menu del browser → **Installa app**; su mobile compare anche un banner dedicato.
+- **iPhone / Safari:** **Condividi → Aggiungi alla schermata Home**.
+
+La PWA si apre a schermo intero, con icona, tema e splash screen. La card **App sul telefono** in Impostazioni mostra lo stato e le istruzioni.
+
+### Offline
+
+Il service worker precarica l'app shell e non mette mai in cache le chiamate a Supabase. Se apri l'app senza rete:
+
+- viene mostrato l'ultimo piano salvato in `localStorage`;
+- l'agenda è in **sola lettura**;
+- un banner indica la modalità offline;
+- **Riprova** e il ritorno della connessione riattivano la sincronizzazione.
+
+### Home mobile
+
+Sopra il calendario resta solo una striscia compatta con:
+
+- smart working e presenze di Grano e Pietro;
+- stato del limite;
+- avvisi;
+- stato mese con pulsante **Conferma**;
+- pulsante **Dettagli**.
+
+Le card complete, gli avvisi estesi, la legenda e le note didattiche sono disponibili dietro **Dettagli** o restano visibili su desktop.
+
 ## Calendario ICS
 
 La scheda **Calendario ICS** offre due modalità per tre calendari:
@@ -223,18 +259,21 @@ src/
     calendar/     calendario, agenda mobile, dettaglio giorno, avvisi
     cloud/        login, loading, errore, conflitto locale/cloud
     layout/       header, tab, footer
+    pwa/          banner e card di installazione
     summary/      riepiloghi per persona e per mese
     ui/           componenti base (button, card, modal, switch…)
   hooks/
     usePlanner.ts stato applicativo, cloud sync e azioni
+    usePwaInstall.ts prompt di installazione e stato standalone
   lib/
     cloud.ts          client Supabase, load/save/realtime, errori
     cloud-bootstrap.ts scelta locale/cloud al primo accesso
     domain/           regole di dominio, date, festivi, metriche, ICS
     storage.ts        persistenza locale, validazione e backup
     supabase.ts       inizializzazione client
-  pages/          calendario, settimana tipo, assenze, ICS, impostazioni
+  pages/          calendario, offline, settimana tipo, assenze, ICS, impostazioni
   test/           setup dei test
+public/           icone PWA, apple-touch-icon, favicon
 supabase/
   config.toml
   migrations/     0001_init.sql, 0002_feed_tokens.sql
@@ -257,7 +296,8 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - conferma/riapertura del mese;
 - generazione ICS, escaping e feed stanza;
 - generatore ICS della Edge Function (feed in abbonamento);
-- decisione di bootstrap locale/cloud.
+- decisione di bootstrap locale/cloud;
+- schermata offline in sola lettura.
 
 ## Sicurezza e privacy
 

@@ -8,6 +8,7 @@ import {
   HardDrive,
   LoaderCircle,
   RotateCcw,
+  WifiOff,
 } from 'lucide-react'
 import type { CloudController } from '../../hooks/usePlanner'
 import { formatMonthLabel } from '../../lib/domain/dates'
@@ -33,6 +34,15 @@ function CloudBadge({ cloud }: { cloud: CloudController }) {
       >
         <HardDrive className="h-3 w-3" />
         Locale
+      </Badge>
+    )
+  }
+
+  if (cloud.offline || cloud.syncStatus === 'offline') {
+    return (
+      <Badge variant="warning" title="Offline: ultimo piano salvato in questo browser">
+        <WifiOff className="h-3 w-3" />
+        Offline
       </Badge>
     )
   }

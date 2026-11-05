@@ -7,11 +7,13 @@ import { LoginPage } from './components/cloud/LoginPage'
 import { Footer } from './components/layout/Footer'
 import { Header } from './components/layout/Header'
 import { TabBar } from './components/layout/TabBar'
+import { InstallBanner } from './components/pwa/InstallBanner'
 import { Button } from './components/ui/Button'
 import { usePlanner } from './hooks/usePlanner'
 import { AbsencesView } from './pages/AbsencesView'
 import { CalendarView } from './pages/CalendarView'
 import { IcsView } from './pages/IcsView'
+import { OfflineView } from './pages/OfflineView'
 import { SettingsView } from './pages/SettingsView'
 import { WeeklyPatternView } from './pages/WeeklyPatternView'
 
@@ -38,6 +40,8 @@ export default function App() {
   }, [tab])
 
   if (cloud.configured && cloud.active) {
+    if (cloud.offline) return <OfflineView controller={controller} />
+
     if (cloud.authLoading) return <CloudLoadingPage message="Verifica della sessione…" />
 
     if (!cloud.sessionEmail) return <LoginPage onSignIn={cloud.signIn} />
@@ -137,6 +141,7 @@ export default function App() {
       </main>
 
       <Footer cloud={cloud} />
+      <InstallBanner />
     </div>
   )
 }

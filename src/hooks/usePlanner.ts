@@ -82,6 +82,7 @@ export interface CloudController {
   conflictBusy: boolean
   message: string | null
   forceLocal: boolean
+  offline: boolean
   signIn: (email: string, password: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   retry: () => void
@@ -118,6 +119,11 @@ export function usePlanner() {
   )
   const [cloudMessage, setCloudMessage] = useState<string | null>(null)
   const [forceLocal, setForceLocal] = useState(false)
+  const [offline, setOffline] = useState(() => {
+    if (typeof navigator === 'undefined') return false
+    return !navigator.onLine && hasStoredState()
+  })
+  const [authRetryKey, setAuthRetryKey] = useState(0)
 
   const stateRef = useRef(state)
   const skipNextCloudSave = useRef(false)
@@ -150,6 +156,7 @@ export function usePlanner() {
   const bootstrapCloud = useCallback(async () => {
     if (!cloudActive) return
 
+    setOffline(false)
     setCloudReady(false)
     setCloudError(null)
     setSyncError(null)
@@ -209,7 +216,18 @@ export function usePlanner() {
         setSyncStatus('saved')
       }
     } catch (error) {
-      setCloudError(formatCloudError(error))
+      const info = formatCloudError(error)
+      if (info.code === 'NETWORK' && hasStoredState()) {
+        setOffline(true)
+        setCloudError(null)
+        setCloudReady(false)
+        setSyncStatus('offline')
+        setSyncError(null)
+        setConflict(null)
+        return
+      }
+
+      setCloudError(info)
       setCloudReady(false)
       setSyncStatus('error')
     }
@@ -250,7 +268,7 @@ export function usePlanner() {
       controller.abort()
       data.subscription.unsubscribe()
     }
-  }, [forceLocal])
+  }, [authRetryKey, forceLocal])
 
   // Bootstrap when a user session becomes available.
   useEffect(() => {
@@ -258,7 +276,23 @@ export function usePlanner() {
     if (bootstrappedUserId.current === sessionUserId) return
     bootstrappedUserId.current = sessionUserId
     void bootstrapCloud()
-  }, [bootstrapCloud, cloudActive, sessionUserId])
+  }, [authRetryKey, bootstrapCloud, cloudActive, sessionUserId])
+
+  // When the connection comes back, re-authenticate and bootstrap the cloud.
+  useEffect(() => {
+    if (!cloudActive || !offline) return
+
+    const onOnline = () => {
+      setOffline(false)
+      setAuthLoading(true)
+      setSyncStatus('loading')
+      bootstrappedUserId.current = null
+      setAuthRetryKey((value) => value + 1)
+    }
+
+    window.addEventListener('online', onOnline)
+    return () => window.removeEventListener('online', onOnline)
+  }, [cloudActive, offline])
 
   // Realtime updates from the other browser.
   useEffect(() => {
@@ -434,6 +468,7 @@ export function usePlanner() {
   }, [])
 
   const handleSignIn = useCallback(async (email: string, password: string) => {
+    setOffline(false)
     setCloudError(null)
     setSyncError(null)
     return signInWithEmail(email, password)
@@ -441,7 +476,9 @@ export function usePlanner() {
 
   const handleSignOut = useCallback(async () => {
     await signOutFromCloud()
+    clearStoredState()
     setSession(null)
+    setOffline(false)
     setCloudReady(false)
     setConflict(null)
     setCloudError(null)
@@ -456,6 +493,7 @@ export function usePlanner() {
   const resolveConflict = useCallback(
     async (choice: 'cloud' | 'local') => {
       if (!conflict) return
+      setOffline(false)
       setConflictBusy(true)
       setSyncError(null)
       try {
@@ -488,6 +526,7 @@ export function usePlanner() {
 
   const continueLocally = useCallback(() => {
     setForceLocal(true)
+    setOffline(false)
     setCloudError(null)
     setConflict(null)
     setSyncError(null)
@@ -498,15 +537,18 @@ export function usePlanner() {
 
   const retryCloud = useCallback(() => {
     setForceLocal(false)
+    setOffline(false)
     setCloudError(null)
     setSyncError(null)
     setCloudReady(false)
     setAuthLoading(true)
     setSyncStatus('loading')
     bootstrappedUserId.current = null
+    setAuthRetryKey((value) => value + 1)
   }, [])
 
   const retry = useCallback(() => {
+    setOffline(false)
     setCloudError(null)
     setSyncError(null)
     if (sessionUserId) {
@@ -567,6 +609,7 @@ export function usePlanner() {
     conflictBusy,
     message: cloudMessage,
     forceLocal,
+    offline,
     signIn: handleSignIn,
     signOut: handleSignOut,
     retry,
