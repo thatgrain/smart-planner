@@ -140,8 +140,10 @@ Il feed in abbonamento è servito dalla function `ics` in `supabase/functions/ic
 
 ```bash
 npx supabase login
-npx supabase functions deploy ics --project-ref hbmoikaemsyqqmwnnbst --no-verify-jwt
+npx supabase functions deploy ics --remote=hbmoikaemsyqqmwnnbst --no-verify-jwt --use-api
 ```
+
+`--use-api` evita di richiedere Docker per il bundling.
 
 In alternativa, dal repository GitHub: **Actions → Deploy Supabase Function → Run workflow**. Serve prima aggiungere il secret `SUPABASE_ACCESS_TOKEN` in **Settings → Secrets and variables → Actions**.
 
