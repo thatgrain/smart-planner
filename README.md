@@ -1,10 +1,8 @@
-# SmartPlanner
+﻿# SmartPlanner
 
 Pianificazione condivisa di una stanza singola tra due colleghi: notti in stanza, giorni di presenza in ufficio, smart working e verifica del limite mensile del 50%.
 
 L'app è pensata per due persone che lavorano nella stessa città, condividono una stanza e possono fare smart working fino al 50% del mese. Una sola persona può dormire in stanza per notte; la presenza in ufficio viene derivata dalle notti adiacenti.
-
-La Fase 2 aggiunge **Supabase**: login, database condiviso e sincronizzazione in tempo reale tra i due browser.
 
 ## Regola principale
 
@@ -55,14 +53,12 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 - Database condiviso con Row Level Security e allowlist delle due email.
 - Sincronizzazione realtime tra i due browser.
 - Salvataggio locale di cache/backup e esportazione/importazione JSON.
-- Download `.ics` per i calendari personali e per il calendario della stanza.
-- Feed ICS in abbonamento con URL segreto e rotazione del token.
+- Download `.ics` e feed ICS in abbonamento con token rigenerabile.
 - PWA installabile su Android e iPhone, con icona, schermo intero e cache dell'app.
 - Consultazione offline in sola lettura dell'ultimo piano salvato.
 - Layout mobile semplificato: riepilogo compatto, calendario subito visibile e dettagli espandibili.
 - Tema chiaro, scuro o automatico dal sistema, con preferenza per dispositivo.
 - Cambio password dal pannello Sicurezza, con verifica della password attuale.
-- Recupero password tramite email con link monouso Supabase.
 
 ## Avvio locale
 
@@ -80,12 +76,12 @@ VITE_SUPABASE_URL=https://<project-ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<publishable-key>
 ```
 
-Senza queste variabili l'app funziona in **modalità locale** con `localStorage`, come nella Fase 1.
+Senza queste variabili l'app funziona in **modalità locale** con `localStorage`.
 
 Altri comandi:
 
 ```bash
-npm test        # dominio, bootstrap cloud, schermate cloud, feed ICS e smoke test UI
+npm test        # dominio, cloud, UI, tema, password, feed ICS
 npm run lint    # oxlint
 npm run build   # typecheck + build di produzione
 npm run preview # anteprima della build
@@ -126,7 +122,7 @@ In **Authentication → Users → Add user → Create new user** crea i due acco
 
 Attiva **Auto Confirm User** per entrambi. Poi, in **Authentication → Providers → Email**, disabilita **Allow new users to sign up**.
 
-Le password le scelgono gli utenti e non vengono mai salvate nel repository.
+Le password le scelgono gli utenti e non vengono mai salvate nel repository. Il cambio password è disponibile dall'app in **Impostazioni → Sicurezza**.
 
 ### 4. Variabili frontend
 
@@ -163,36 +159,6 @@ La function:
 
 Se la function non è deployata, l'anteprima del feed restituisce `404`.
 
-### 6. SMTP e recupero password
-
-Il reset password usa le email di Supabase Auth. L'email integrata di Supabase **non è affidabile**:
-
-- 2 email/ora per progetto;
-- invia solo a indirizzi autorizzati del team;
-- non garantisce consegna.
-
-Per usare il recupero con entrambi gli account serve un **SMTP personalizzato**. Consigliamo **Brevo** (free, circa 300 email/giorno, mittente verificabile senza dominio):
-
-1. crea un account Brevo;
-2. verifica l'indirizzo mittente;
-3. genera una SMTP key;
-4. in Supabase: **Authentication → Emails → SMTP Settings → Enable custom SMTP**:
-   - Host: `smtp-relay.brevo.com`
-   - Porta: `587` (STARTTLS) o `465` (SSL)
-   - Username: email account Brevo
-   - Password: SMTP key
-   - Sender email: indirizzo verificato
-   - Sender name: `SmartPlanner`
-
-Poi configura gli URL in **Authentication → URL Configuration**:
-
-- **Site URL:** `https://thatgrain.github.io/smart-planner/`
-- **Redirect URLs:**
-  - `https://thatgrain.github.io/smart-planner/**`
-  - `http://localhost:5173/**`
-
-Il template **Reset Password** può restare quello di default. Il link scade secondo le impostazioni Supabase ed è monouso.
-
 ## Primo accesso e sincronizzazione
 
 Al primo login:
@@ -201,7 +167,7 @@ Al primo login:
 - se il cloud contiene già un piano e il browser ha un piano locale diverso, viene mostrata una scelta: **usa il piano cloud** oppure **carica il piano locale**;
 - dopo la scelta, il cloud diventa la fonte di verità e il browser ne mantiene una cache locale.
 
-Le modifiche vengono salvate con un debounce di circa 450 ms e propagate all'altro browser via Realtime. In caso di errore di salvataggio, l'app avvisa e mantiene le modifiche in locale; il pulsante **Sincronizza ora** riprova.
+Le modifiche vengono salvate con un debounce di circa 450 ms e propagate all'altro browser via Realtime. In caso di errore di salvataggio, l'app avvisa e mantiene le modifiche in locale; **Sincronizza ora** riprova.
 
 ## Deploy su GitHub Pages
 
@@ -218,7 +184,7 @@ Procedura:
 4. Il workflow parte a ogni push su `main` e pubblica `dist`.
 5. L'app sarà su `https://<utente>.github.io/<repository>/`.
 
-I test e il lint vengono eseguiti prima del deploy: se falliscono, il sito non viene aggiornato.
+Test e lint vengono eseguiti prima del deploy: se falliscono, il sito non viene aggiornato.
 
 ## PWA e mobile
 
@@ -273,25 +239,7 @@ In **Impostazioni → Sicurezza** è possibile cambiare la password:
 
 L'app verifica la password attuale con Supabase, poi usa `supabase.auth.updateUser({ password })`. La password è gestita da Supabase e non viene mai salvata in chiaro da SmartPlanner. Il form è disabilitato offline e nascosto in modalità locale.
 
-### Recupero password
-
-Dalla schermata di login:
-
-1. **Password dimenticata?**
-2. inserisci l'email;
-3. ricevi un link monouso;
-4. il link riapre SmartPlanner sulla schermata **Imposta nuova password**;
-5. dopo il salvataggio, l'app disconnette la sessione di recovery e le altre sessioni, poi torna al login.
-
-L'app usa `resetPasswordForEmail` e gestisce l'evento `PASSWORD_RECOVERY` di Supabase. Il link scade secondo le impostazioni Supabase, funziona una sola volta e non rivela se l'email è registrata.
-
-Per funzionare serve:
-
-- SMTP configurato (vedi **Configurazione Supabase → 6. SMTP**);
-- Site URL e Redirect URLs corretti;
-- `detectSessionInUrl` attivo nel client Supabase.
-
-Se l'SMTP non è configurato, il form mostra un errore chiaro e nessuna email viene inviata.
+Se una password viene dimenticata, l'amministratore può reimpostarla dalla dashboard Supabase (**Authentication → Users**) o tramite la Admin API con la service role key.
 
 ## Calendario ICS
 
@@ -332,7 +280,7 @@ src/
   components/
     account/      cambio password
     calendar/     calendario, agenda mobile, dettaglio giorno, avvisi
-    cloud/        login, reset password, loading, errore, conflitto locale/cloud
+    cloud/        login, loading, errore, conflitto locale/cloud
     layout/       header, tab, footer
     pwa/          banner e card di installazione
     settings/     scelta tema
@@ -376,8 +324,7 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - decisione di bootstrap locale/cloud;
 - schermata offline in sola lettura;
 - applicazione e persistenza del tema;
-- validazione del cambio password;
-- richiesta del link di recupero e reset della password.
+- validazione del cambio password.
 
 ## Sicurezza e privacy
 

@@ -4,7 +4,6 @@ import { CloudConflictScreen } from './components/cloud/CloudConflictScreen'
 import { CloudErrorPage } from './components/cloud/CloudErrorPage'
 import { CloudLoadingPage } from './components/cloud/CloudLoadingPage'
 import { LoginPage } from './components/cloud/LoginPage'
-import { ResetPasswordPage } from './components/cloud/ResetPasswordPage'
 import { Footer } from './components/layout/Footer'
 import { Header } from './components/layout/Header'
 import { TabBar } from './components/layout/TabBar'
@@ -41,21 +40,11 @@ export default function App() {
   }, [tab])
 
   if (cloud.configured && cloud.active) {
-    if (cloud.recovery) return <ResetPasswordPage cloud={cloud} />
-
     if (cloud.offline) return <OfflineView controller={controller} />
 
     if (cloud.authLoading) return <CloudLoadingPage message="Verifica della sessione…" />
 
-    if (!cloud.sessionEmail) {
-      return (
-        <LoginPage
-          onSignIn={cloud.signIn}
-          onRequestReset={cloud.requestReset}
-          notice={cloud.loginNotice}
-        />
-      )
-    }
+    if (!cloud.sessionEmail) return <LoginPage onSignIn={cloud.signIn} />
 
     if (cloud.error) {
       return (
