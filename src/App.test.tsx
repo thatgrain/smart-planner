@@ -24,6 +24,10 @@ describe('SmartPlanner app', () => {
 
     await user.click(screen.getByRole('tab', { name: /Calendario ICS/ }))
     expect(screen.getByRole('heading', { name: 'Calendario ICS' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Feed in abbonamento', level: 2 }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Download .ics' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: /Impostazioni/ }))
     expect(screen.getByText('Persone')).toBeInTheDocument()

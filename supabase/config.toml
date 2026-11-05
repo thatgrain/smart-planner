@@ -1,0 +1,4 @@
+project_id = "hbmoikaemsyqqmwnnbst"
+
+[functions.ics]
+verify_jwt = false

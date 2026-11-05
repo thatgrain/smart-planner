@@ -10,6 +10,7 @@ const isTest = import.meta.env.MODE === 'test'
  * do not require a live Supabase project.
  */
 export const isSupabaseConfigured = !isTest && Boolean(config)
+export const supabaseUrl = config?.url ?? ''
 
 export const supabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(config!.url, config!.key, {

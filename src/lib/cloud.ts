@@ -4,10 +4,17 @@ import type {
   Session,
 } from '@supabase/supabase-js'
 import { isPlannerState, normaliseState } from './storage'
-import { supabase } from './supabase'
+import { supabase, supabaseUrl } from './supabase'
 import type { PlannerState } from './domain/types'
 
 export const PLANNER_ROW_ID = 1
+
+export type FeedId = 'A' | 'B' | 'room'
+
+export interface FeedTokenRow {
+  feed: FeedId
+  token: string
+}
 
 export interface CloudLoadResult {
   state: PlannerState | null
@@ -159,6 +166,54 @@ export function subscribeToCloudState(
   return () => {
     void client.removeChannel(channel)
   }
+}
+
+export async function loadFeedTokens(): Promise<Partial<Record<FeedId, string>>> {
+  if (!supabase) return {}
+
+  const { data, error } = await supabase.from('feed_tokens').select('feed, token')
+  if (error) throw error
+
+  const tokens: Partial<Record<FeedId, string>> = {}
+  for (const row of data as FeedTokenRow[]) {
+    tokens[row.feed] = row.token
+  }
+  return tokens
+}
+
+export function generateFeedToken(): string {
+  const bytes = new Uint8Array(32)
+  const webCrypto = globalThis.crypto
+
+  if (webCrypto && typeof webCrypto.getRandomValues === 'function') {
+    webCrypto.getRandomValues(bytes)
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256)
+    }
+  }
+
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+export async function saveFeedToken(feed: FeedId): Promise<string> {
+  if (!supabase) throw new Error('Supabase non configurato')
+
+  const token = generateFeedToken()
+  const { data, error } = await supabase
+    .from('feed_tokens')
+    .upsert({ feed, token }, { onConflict: 'feed' })
+    .select('token')
+    .single()
+
+  if (error) throw error
+  return (data as { token: string }).token
+}
+
+export function getFeedUrl(token: string): string {
+  const base = supabaseUrl.replace(/\/$/, '')
+  if (!base) return ''
+  return `${base}/functions/v1/ics?token=${encodeURIComponent(token)}`
 }
 
 function mapAuthError(error: AuthError): string {

@@ -56,6 +56,7 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 - Sincronizzazione realtime tra i due browser.
 - Salvataggio locale di cache/backup e esportazione/importazione JSON.
 - Download `.ics` per i calendari personali e per il calendario della stanza.
+- Feed ICS in abbonamento con URL segreto e rotazione del token.
 - Layout responsive: griglia su desktop, agenda giornaliera su mobile.
 
 ## Avvio locale
@@ -79,7 +80,7 @@ Senza queste variabili l'app funziona in **modalità locale** con `localStorage`
 Altri comandi:
 
 ```bash
-npm test        # test di dominio, bootstrap cloud e smoke test UI
+npm test        # dominio, bootstrap cloud, schermate cloud, feed ICS e smoke test UI
 npm run lint    # oxlint
 npm run build   # typecheck + build di produzione
 npm run preview # anteprima della build
@@ -93,20 +94,21 @@ Crea un progetto gratuito su [supabase.com](https://supabase.com/dashboard), pre
 
 ### 2. Database
 
-Apri il **SQL Editor**, incolla il contenuto di:
+Apri il **SQL Editor** ed esegui, nell'ordine:
 
 ```text
 supabase/migrations/0001_init.sql
+supabase/migrations/0002_feed_tokens.sql
 ```
 
-e premi **Run**.
-
-La migrazione crea:
+La prima migrazione crea:
 
 - `public.planner_state`: un unico record JSONB con tutto lo stato dell'app;
 - RLS con allowlist delle email `massimiliano.granello@gmail.com` e `pietro.cargnel26@gmail.com`;
 - trigger automatico `updated_at` / `updated_by`;
 - `replica identity full` e Realtime sulla tabella.
+
+La seconda crea `public.feed_tokens`, con i token iniziali dei tre feed ICS e le policy RLS.
 
 ### 3. Utenti
 
@@ -131,6 +133,26 @@ Su GitHub Pages il workflow passa già le credenziali publishable durante la bui
 e sostituisci i valori hardcoded nel workflow con `${{ vars.VITE_SUPABASE_URL }}` e `${{ vars.VITE_SUPABASE_ANON_KEY }}`.
 
 > La publishable key è pensata per essere pubblica nel bundle. La `service_role`/`secret key` non viene mai usata dal frontend.
+
+### 5. Edge Function del feed ICS
+
+Il feed in abbonamento è servito dalla function `ics` in `supabase/functions/ics`. Va deployata una volta sola:
+
+```bash
+npx supabase login
+npx supabase functions deploy ics --project-ref hbmoikaemsyqqmwnnbst --no-verify-jwt
+```
+
+In alternativa, dal repository GitHub: **Actions → Deploy Supabase Function → Run workflow**. Serve prima aggiungere il secret `SUPABASE_ACCESS_TOKEN` in **Settings → Secrets and variables → Actions**.
+
+La function:
+
+- è pubblica ma protetta dal token nell'URL;
+- legge `feed_tokens` e `planner_state` con la service role key iniettata da Supabase;
+- restituisce un calendario `text/calendar` aggiornato;
+- non richiede JWT perché Google Calendar non può inviarlo.
+
+Se la function non è deployata, l'anteprima del feed restituisce `404`.
 
 ## Primo accesso e sincronizzazione
 
@@ -161,15 +183,29 @@ I test e il lint vengono eseguiti prima del deploy: se falliscono, il sito non v
 
 ## Calendario ICS
 
-La scheda **Calendario ICS** genera tre file:
+La scheda **Calendario ICS** offre due modalità per tre calendari:
 
-- calendario personale di Grano;
-- calendario personale di Pietro;
-- calendario della stanza (solo pernottamenti).
+- personale di Grano;
+- personale di Pietro;
+- stanza (solo pernottamenti).
 
-Il download copre i prossimi 12 mesi a partire dal mese visualizzato. Gli eventi sono giornalieri e non bloccano gli orari. I mesi senza notti, assenze o piano confermato esportano solo le presenze esplicite.
+### Feed in abbonamento
 
-Per Google Calendar: **Impostazioni → Importa ed esporta → Importa**, seleziona il file `.ics` e il calendario di destinazione. Il file è un'istantanea: dopo una modifica va riscaricato e reimportato. Il feed in abbonamento con aggiornamento automatico arriverà con Supabase Edge Functions.
+Ogni calendario ha un URL segreto generato da Supabase e servito dalla Edge Function `ics`. In Google Calendar:
+
+1. **Altri calendari → + → Da URL**
+2. incolla l'URL del feed;
+3. **Aggiungi calendario**.
+
+Google Calendar aggiorna il feed ogni 12–24 ore. Per forzare l'aggiornamento si può rimuovere e riaggiungere il calendario con `#2` in fondo all'URL.
+
+Il pulsante **Rigenera** cambia il token: il vecchio URL smette di funzionare e va sostituito in Google Calendar. L'URL contiene un token segreto: non condividerlo.
+
+### Download `.ics`
+
+Il download copre i prossimi 12 mesi a partire dal mese visualizzato. Gli eventi sono giornalieri e non bloccano gli orari. Per Google Calendar: **Impostazioni → Importa ed esporta → Importa**, seleziona il file `.ics` e il calendario di destinazione. Il file è un'istantanea: dopo una modifica va riscaricato e reimportato.
+
+In entrambi i casi, i mesi senza notti, assenze o piano confermato esportano solo le presenze esplicite.
 
 ## Backup
 
@@ -198,7 +234,10 @@ src/
   pages/          calendario, settimana tipo, assenze, ICS, impostazioni
   test/           setup dei test
 supabase/
-  migrations/     0001_init.sql
+  config.toml
+  migrations/     0001_init.sql, 0002_feed_tokens.sql
+  functions/
+    ics/          index.ts, calendar.ts
 ```
 
 ## Test
@@ -215,6 +254,7 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - eccezioni, notti non sfruttate e notti a cavallo del mese;
 - conferma/riapertura del mese;
 - generazione ICS, escaping e feed stanza;
+- generatore ICS della Edge Function (feed in abbonamento);
 - decisione di bootstrap locale/cloud.
 
 ## Sicurezza e privacy
@@ -222,10 +262,10 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - Il sito è pubblico, ma i dati sono accessibili solo dopo login.
 - RLS e allowlist limitano lettura/scrittura alle due email configurate.
 - La publishable key è pubblica per design; la secret key non è nel frontend.
-- Il backup JSON e il token ICS (in una fase futura) vanno trattati come dati personali.
+- Il backup JSON e i token dei feed ICS vanno trattati come dati personali.
+- La Edge Function `ics` è pubblica ma protetta dal token; usa la service role key solo lato server.
 - Supabase Free mette in pausa i progetti dopo 7 giorni di inattività; con l'uso quotidiano non è un problema.
 
 ## Prossime fasi
 
-- **Fase 4 — Feed ICS in abbonamento:** Edge Function Supabase con token per i tre feed, aggiornamento automatico in Google Calendar.
 - **Fase 5 — Rifiniture:** export CSV, auto-proposta del piano, PWA, notifiche.
