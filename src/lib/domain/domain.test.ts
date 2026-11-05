@@ -281,8 +281,8 @@ describe('esportazione ICS', () => {
 
     expect(ics).toContain('BEGIN:VCALENDAR')
     expect(ics).toContain('END:VCALENDAR')
-    expect(ics).toContain('SUMMARY:Ufficio – Massi')
-    expect(ics).toContain('SUMMARY:Smart working – Massi')
+    expect(ics).toContain('SUMMARY:Ufficio – Grano')
+    expect(ics).toContain('SUMMARY:Smart working – Grano')
     expect(ics).toContain('DTSTART;VALUE=DATE:20261102')
     expect(ics).toContain('DTEND;VALUE=DATE:20261103')
     expect(ics).toContain('UID:sp-A-office-2026-11-02@smartplanner')
@@ -296,8 +296,8 @@ describe('esportazione ICS', () => {
     const state = applyPatternToMonth(baseState(), NOVEMBER)
     const ics = generateIcs(state, 'room', { months: [NOVEMBER], now })
 
-    expect(ics).toContain('SUMMARY:Notte in stanza – Massi')
-    expect(ics).toContain('SUMMARY:Notte in stanza – Collega')
+    expect(ics).toContain('SUMMARY:Notte in stanza – Grano')
+    expect(ics).toContain('SUMMARY:Notte in stanza – Pietro')
     expect(ics).toContain('UID:sp-room-2026-11-02@smartplanner')
     expect(ics.split('BEGIN:VEVENT')).toHaveLength(18)
   })

@@ -8,7 +8,7 @@ import type { PlannerState } from './domain/types'
 
 export const STORAGE_KEY = 'smartplanner.state.v1'
 
-function looksLikeState(value: unknown): value is PlannerState {
+export function isPlannerState(value: unknown): value is PlannerState {
   if (!value || typeof value !== 'object') return false
   const state = value as Partial<PlannerState>
   return (
@@ -27,9 +27,26 @@ function looksLikeState(value: unknown): value is PlannerState {
   )
 }
 
-function normalise(state: PlannerState): PlannerState {
-  const withHolidays = ensureHolidayYears(state)
+function migrateDefaultNames(state: PlannerState): PlannerState {
+  return {
+    ...state,
+    people: state.people.map((person) => {
+      if (person.id === 'A' && person.name === 'Massi') return { ...person, name: 'Grano' }
+      if (person.id === 'B' && person.name === 'Collega') return { ...person, name: 'Pietro' }
+      return person
+    }),
+  }
+}
+
+export function normaliseState(state: PlannerState): PlannerState {
+  const migrated = migrateDefaultNames(state)
+  const withHolidays = ensureHolidayYears(migrated)
   return syncAutoPresence(withHolidays)
+}
+
+export function hasStoredState(): boolean {
+  if (typeof window === 'undefined') return false
+  return Boolean(window.localStorage.getItem(STORAGE_KEY))
 }
 
 export function loadState(): PlannerState {
@@ -39,9 +56,9 @@ export function loadState(): PlannerState {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return createInitialState()
     const parsed: unknown = JSON.parse(raw)
-    if (!looksLikeState(parsed)) return createInitialState()
+    if (!isPlannerState(parsed)) return createInitialState()
     if (parsed.version !== STATE_VERSION_VALUE) return createInitialState()
-    return normalise(parsed)
+    return normaliseState(parsed)
   } catch {
     return createInitialState()
   }
@@ -74,8 +91,8 @@ export function serialiseState(state: PlannerState): string {
 export function parseImportedState(raw: string): PlannerState | null {
   try {
     const parsed: unknown = JSON.parse(raw)
-    if (!looksLikeState(parsed)) return null
-    return normalise(parsed)
+    if (!isPlannerState(parsed)) return null
+    return normaliseState(parsed)
   } catch {
     return null
   }

@@ -1,12 +1,19 @@
 import { useMemo, useRef, useState } from 'react'
 import {
+  AlertTriangle,
   Calculator,
   Check,
+  CheckCircle2,
+  Cloud,
   Database,
   Download,
   HardDrive,
   Info,
+  LoaderCircle,
+  LogOut,
+  Mail,
   Percent,
+  RefreshCw,
   RotateCcw,
   Settings2,
   Upload,
@@ -25,7 +32,7 @@ import { PersonAvatar } from '../components/ui/PersonAvatar'
 import { Switch } from '../components/ui/Switch'
 
 export function SettingsView({ controller }: { controller: PlannerController }) {
-  const { state, month, actions } = controller
+  const { state, month, actions, cloud } = controller
   const [resetOpen, setResetOpen] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -68,10 +75,134 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
         </div>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">Impostazioni</h2>
         <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500">
-          Personalizza nomi, colori e regole di calcolo. In questa fase i dati sono salvati
-          localmente nel browser; puoi esportarli come backup JSON.
+          {cloud.active
+            ? 'Personalizza nomi, colori e regole di calcolo. Il piano è condiviso con Pietro e sincronizzato in tempo reale; puoi comunque esportare un backup JSON.'
+            : 'Personalizza nomi, colori e regole di calcolo. I dati sono salvati localmente nel browser; puoi esportarli come backup JSON.'}
         </p>
       </div>
+
+      <Card className="p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span
+              className={
+                cloud.active
+                  ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600'
+                  : 'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500'
+              }
+            >
+              {cloud.active ? <Cloud className="h-5 w-5" /> : <HardDrive className="h-5 w-5" />}
+            </span>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-900">
+                  Account e sincronizzazione
+                </h3>
+                <Badge
+                  variant={
+                    !cloud.active
+                      ? 'neutral'
+                      : cloud.syncStatus === 'error'
+                        ? 'danger'
+                        : cloud.syncStatus === 'saving' || cloud.syncStatus === 'loading'
+                          ? 'warning'
+                          : 'success'
+                  }
+                >
+                  {!cloud.active
+                    ? 'Locale'
+                    : cloud.syncStatus === 'error'
+                      ? 'Errore'
+                      : cloud.syncStatus === 'saving'
+                        ? 'Salvataggio…'
+                        : cloud.syncStatus === 'loading'
+                          ? 'Connessione…'
+                          : 'Sincronizzato'}
+                </Badge>
+              </div>
+              <div className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500">
+                {cloud.active ? (
+                  <>
+                    <Mail className="h-3 w-3" />
+                    {cloud.sessionEmail}
+                  </>
+                ) : cloud.configured ? (
+                  'Cloud disattivato: stai usando solo i dati di questo browser.'
+                ) : (
+                  'Supabase non configurato: modalità locale.'
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {cloud.active ? (
+              <>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void cloud.syncNow()}
+                  disabled={!cloud.ready || cloud.syncStatus === 'saving'}
+                >
+                  {cloud.syncStatus === 'saving' ? (
+                    <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-3.5 w-3.5" />
+                  )}
+                  Sincronizza ora
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => void cloud.reloadCloud()}
+                  disabled={!cloud.ready}
+                >
+                  <Cloud className="h-3.5 w-3.5" />
+                  Ricarica dal cloud
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => void cloud.signOut()}>
+                  <LogOut className="h-3.5 w-3.5" />
+                  Esci
+                </Button>
+              </>
+            ) : cloud.configured ? (
+              <Button variant="primary" size="sm" onClick={cloud.retryCloud}>
+                <Cloud className="h-3.5 w-3.5" />
+                Torna al cloud
+              </Button>
+            ) : null}
+          </div>
+        </div>
+
+        {cloud.syncError ? (
+          <div className="mt-3 flex flex-col gap-2 rounded-xl bg-rose-50 px-3 py-2.5 text-[11px] leading-5 text-rose-700 sm:flex-row sm:items-start">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <div className="flex-1">
+              <div className="font-medium">{cloud.syncError.title}</div>
+              <div>{cloud.syncError.message}</div>
+              {cloud.syncError.hint ? <div className="mt-0.5">{cloud.syncError.hint}</div> : null}
+            </div>
+            <Button variant="secondary" size="sm" onClick={() => void cloud.syncNow()}>
+              <RefreshCw className="h-3.5 w-3.5" />
+              Riprova
+            </Button>
+          </div>
+        ) : null}
+
+        <div className="mt-3 flex items-center gap-1.5 text-[10px] text-slate-400">
+          {cloud.active ? (
+            <>
+              <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+              Le modifiche vengono sincronizzate in tempo reale con Pietro.
+            </>
+          ) : (
+            <>
+              <Info className="h-3 w-3" />
+              I dati restano solo in questo browser.
+            </>
+          )}
+        </div>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="p-5">
@@ -246,8 +377,9 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
             <h3 className="text-sm font-semibold text-slate-900">Dati e backup</h3>
           </div>
           <p className="mt-1 text-[11px] leading-5 text-slate-500">
-            I dati sono salvati in <code className="rounded bg-slate-100 px-1">localStorage</code>.
-            Esporta un backup prima di cambiare browser o dispositivo.
+            {cloud.active
+              ? 'Il piano è nel cloud e viene salvato anche in questo browser. Esporta un backup JSON se vuoi una copia indipendente.'
+              : 'I dati sono salvati in localStorage. Esporta un backup prima di cambiare browser o dispositivo.'}
           </p>
 
           <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-400">
@@ -300,8 +432,9 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
 
           <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5 text-[10px] leading-4 text-slate-500">
             <Info className="mr-1 inline h-3 w-3" />
-            Fase 1: i dati non sono ancora condivisi tra te e il collega. La sincronizzazione
-            Supabase arriverà nella Fase 2.
+            {cloud.active
+              ? 'Importare un backup sostituisce il piano condiviso per entrambi. Usa questa funzione con attenzione.'
+              : 'Modalità locale: i dati non sono condivisi tra te e Pietro. Configura Supabase per sincronizzarli.'}
           </div>
         </Card>
       </div>
@@ -310,7 +443,9 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
         <span>
           Mese visualizzato: <span className="font-medium text-slate-700">{formatMonthLabel(month)}</span>
         </span>
-        <Badge variant="neutral">SmartPlanner · Fase 1</Badge>
+        <Badge variant={cloud.active ? 'success' : 'neutral'}>
+          SmartPlanner · {cloud.active ? 'Cloud' : 'Locale'}
+        </Badge>
       </div>
 
       <ConfirmDialog
@@ -318,7 +453,11 @@ export function SettingsView({ controller }: { controller: PlannerController }) 
         onClose={() => setResetOpen(false)}
         onConfirm={actions.resetDemo}
         title="Ripristinare i dati demo?"
-        message="Tutte le notti, presenze, assenze e festivi personalizzati verranno sostituiti dai dati iniziali. L'operazione non può essere annullata."
+        message={
+          cloud.active
+            ? "Tutte le notti, presenze, assenze e festivi personalizzati verranno sostituiti dai dati iniziali. Il piano condiviso nel cloud verrà aggiornato per entrambi. L'operazione non può essere annullata."
+            : "Tutte le notti, presenze, assenze e festivi personalizzati verranno sostituiti dai dati iniziali. L'operazione non può essere annullata."
+        }
         confirmLabel="Ripristina"
         danger
       />

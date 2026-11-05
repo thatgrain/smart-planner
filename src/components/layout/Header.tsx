@@ -1,13 +1,18 @@
 import {
+  AlertTriangle,
   CalendarDays,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Cloud,
   HardDrive,
+  LoaderCircle,
   RotateCcw,
 } from 'lucide-react'
+import type { CloudController } from '../../hooks/usePlanner'
 import { formatMonthLabel } from '../../lib/domain/dates'
 import type { MonthStatus } from '../../lib/domain/types'
-import { Badge } from '../ui/Badge'
+import { Badge, type BadgeVariant } from '../ui/Badge'
 import { Button } from '../ui/Button'
 
 interface HeaderProps {
@@ -16,6 +21,63 @@ interface HeaderProps {
   onPreviousMonth: () => void
   onNextMonth: () => void
   onToday: () => void
+  cloud: CloudController
+}
+
+function CloudBadge({ cloud }: { cloud: CloudController }) {
+  if (!cloud.active) {
+    return (
+      <Badge
+        variant="neutral"
+        title={cloud.configured && cloud.forceLocal ? 'Cloud disattivato: dati solo in questo browser' : 'Dati salvati solo in questo browser'}
+      >
+        <HardDrive className="h-3 w-3" />
+        Locale
+      </Badge>
+    )
+  }
+
+  if (cloud.syncStatus === 'loading') {
+    return (
+      <Badge variant="info" title="Connessione a Supabase">
+        <LoaderCircle className="h-3 w-3 animate-spin" />
+        Connessione…
+      </Badge>
+    )
+  }
+
+  if (cloud.syncStatus === 'saving') {
+    return (
+      <Badge variant="warning" title="Salvataggio in corso">
+        <LoaderCircle className="h-3 w-3 animate-spin" />
+        Salvataggio…
+      </Badge>
+    )
+  }
+
+  if (cloud.syncStatus === 'error') {
+    return (
+      <Badge variant="danger" title="Ultimo salvataggio non riuscito">
+        <AlertTriangle className="h-3 w-3" />
+        Errore sync
+      </Badge>
+    )
+  }
+
+  const variant: BadgeVariant = 'success'
+  return (
+    <Badge
+      variant={variant}
+      title={cloud.sessionEmail ? `Sincronizzato · ${cloud.sessionEmail}` : 'Sincronizzato'}
+    >
+      {cloud.syncStatus === 'saved' ? (
+        <CheckCircle2 className="h-3 w-3" />
+      ) : (
+        <Cloud className="h-3 w-3" />
+      )}
+      Cloud
+    </Badge>
+  )
 }
 
 export function Header({
@@ -24,6 +86,7 @@ export function Header({
   onPreviousMonth,
   onNextMonth,
   onToday,
+  cloud,
 }: HeaderProps) {
   return (
     <header className="border-b border-slate-200/80 bg-white/80 backdrop-blur-xl">
@@ -37,10 +100,9 @@ export function Header({
               <h1 className="text-lg font-semibold tracking-tight text-slate-900">
                 SmartPlanner
               </h1>
-              <Badge variant="neutral" className="hidden sm:inline-flex">
-                <HardDrive className="h-3 w-3" />
-                Locale
-              </Badge>
+              <span className="hidden sm:inline-flex">
+                <CloudBadge cloud={cloud} />
+              </span>
             </div>
             <p className="text-xs text-slate-500">
               Notti in stanza, presenza in ufficio e smart working
@@ -87,6 +149,10 @@ export function Header({
           >
             {status === 'confirmed' ? 'Confermato' : 'Bozza'}
           </Badge>
+
+          <span className="sm:hidden">
+            <CloudBadge cloud={cloud} />
+          </span>
         </div>
       </div>
     </header>

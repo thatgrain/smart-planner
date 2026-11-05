@@ -334,8 +334,8 @@ export function createInitialState(now = new Date()): PlannerState {
   const initial: PlannerState = {
     version: STATE_VERSION,
     people: [
-      { id: 'A', name: 'Massi', color: '#2563eb' },
-      { id: 'B', name: 'Collega', color: '#d97706' },
+      { id: 'A', name: 'Grano', color: '#2563eb' },
+      { id: 'B', name: 'Pietro', color: '#d97706' },
     ],
     nights: [],
     presence: [],

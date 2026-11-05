@@ -38,6 +38,11 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # Publishable client credentials: safe to expose in the static bundle.
+          # The database is protected by Supabase Auth + Row Level Security.
+          VITE_SUPABASE_URL: https://hbmoikaemsyqqmwnnbst.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_URvMy99-LtmeDNsKl-q-Ug_OROoVRWp
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

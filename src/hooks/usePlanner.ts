@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import {
   addMonthsToMonthKey,
   currentMonthKey,
@@ -31,7 +32,23 @@ import type {
   PlannerTab,
 } from '../lib/domain/types'
 import {
+  formatCloudError,
+  getSession,
+  isCloudLinked,
+  loadCloudState,
+  markCloudLinked,
+  saveCloudState,
+  signInWithEmail,
+  signOutFromCloud,
+  subscribeToCloudState,
+  type CloudErrorInfo,
+  type SyncStatus,
+} from '../lib/cloud'
+import { decideBootstrap } from '../lib/cloud-bootstrap'
+import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import {
   clearStoredState,
+  hasStoredState,
   loadState,
   parseImportedState,
   resetToDemoState,
@@ -44,6 +61,36 @@ export interface AddAbsenceInput {
   start: string
   end: string
   note?: string
+}
+
+export interface CloudConflict {
+  local: PlannerState
+  remote: PlannerState
+  remoteUpdatedAt: string | null
+}
+
+export interface CloudController {
+  configured: boolean
+  active: boolean
+  ready: boolean
+  authLoading: boolean
+  sessionEmail: string | null
+  syncStatus: SyncStatus
+  error: CloudErrorInfo | null
+  syncError: CloudErrorInfo | null
+  conflict: CloudConflict | null
+  conflictBusy: boolean
+  message: string | null
+  forceLocal: boolean
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>
+  signOut: () => Promise<void>
+  retry: () => void
+  resolveConflict: (choice: 'cloud' | 'local') => Promise<void>
+  continueLocally: () => void
+  retryCloud: () => void
+  syncNow: () => Promise<void>
+  reloadCloud: () => Promise<void>
+  dismissMessage: () => void
 }
 
 function makeId(): string {
@@ -59,9 +106,195 @@ export function usePlanner() {
   const [tab, setTab] = useState<PlannerTab>('calendar')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
+  const [session, setSession] = useState<Session | null>(null)
+  const [authLoading, setAuthLoading] = useState(isSupabaseConfigured)
+  const [cloudReady, setCloudReady] = useState(!isSupabaseConfigured)
+  const [cloudError, setCloudError] = useState<CloudErrorInfo | null>(null)
+  const [syncError, setSyncError] = useState<CloudErrorInfo | null>(null)
+  const [conflict, setConflict] = useState<CloudConflict | null>(null)
+  const [conflictBusy, setConflictBusy] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>(
+    isSupabaseConfigured ? 'loading' : 'local',
+  )
+  const [cloudMessage, setCloudMessage] = useState<string | null>(null)
+  const [forceLocal, setForceLocal] = useState(false)
+
+  const stateRef = useRef(state)
+  const skipNextCloudSave = useRef(false)
+  const lastRemoteUpdatedAt = useRef<string | null>(null)
+  const bootstrappedUserId = useRef<string | null>(null)
+
+  const cloudActive = isSupabaseConfigured && !forceLocal
+  const sessionUserId = session?.user.id ?? null
+
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
+
+  // Local cache: always keep a copy in the browser (also useful for offline/backup).
   useEffect(() => {
     saveState(state)
   }, [state])
+
+  const applyRemote = useCallback((remoteState: PlannerState, updatedAt: string | null) => {
+    lastRemoteUpdatedAt.current = updatedAt
+    skipNextCloudSave.current = true
+    setState(remoteState)
+    saveState(remoteState)
+  }, [])
+
+  const bootstrapCloud = useCallback(async () => {
+    if (!cloudActive) return
+
+    setCloudReady(false)
+    setCloudError(null)
+    setSyncError(null)
+    setConflict(null)
+    setSyncStatus('loading')
+
+    try {
+      const remote = await loadCloudState()
+      const local = stateRef.current
+      const decision = decideBootstrap({
+        hasLocal: hasStoredState(),
+        hasRemote: Boolean(remote.state),
+        linked: isCloudLinked(),
+        local,
+        remote: remote.state,
+      })
+
+      if (decision === 'use-cloud') {
+        if (!remote.state) throw new Error('Stato cloud non valido')
+        applyRemote(remote.state, remote.updatedAt)
+        markCloudLinked()
+        setCloudReady(true)
+        setSyncStatus('saved')
+        return
+      }
+
+      if (decision === 'upload-local') {
+        const updatedAt = await saveCloudState(local)
+        lastRemoteUpdatedAt.current = updatedAt
+        markCloudLinked()
+        skipNextCloudSave.current = true
+        setCloudReady(true)
+        setSyncStatus('saved')
+        setCloudMessage('Piano locale caricato nel cloud.')
+        return
+      }
+
+      if (decision === 'create-initial') {
+        const initial = createInitialState()
+        const updatedAt = await saveCloudState(initial)
+        lastRemoteUpdatedAt.current = updatedAt
+        markCloudLinked()
+        skipNextCloudSave.current = true
+        setState(initial)
+        setCloudReady(true)
+        setSyncStatus('saved')
+        setCloudMessage('Piano iniziale creato nel cloud.')
+        return
+      }
+
+      if (remote.state) {
+        setConflict({
+          local,
+          remote: remote.state,
+          remoteUpdatedAt: remote.updatedAt,
+        })
+        setSyncStatus('saved')
+      }
+    } catch (error) {
+      setCloudError(formatCloudError(error))
+      setCloudReady(false)
+      setSyncStatus('error')
+    }
+  }, [applyRemote, cloudActive])
+
+  // Auth session bootstrap.
+  useEffect(() => {
+    if (!isSupabaseConfigured || forceLocal || !supabase) return
+
+    const controller = new AbortController()
+
+    void getSession()
+      .then((currentSession) => {
+        if (controller.signal.aborted) return
+        setSession(currentSession)
+        setAuthLoading(false)
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return
+        setCloudError(formatCloudError(error))
+        setAuthLoading(false)
+        setSyncStatus('error')
+      })
+
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+      if (!nextSession) {
+        setCloudReady(false)
+        setConflict(null)
+        setCloudError(null)
+        setSyncError(null)
+        setSyncStatus('local')
+        bootstrappedUserId.current = null
+      }
+    })
+
+    return () => {
+      controller.abort()
+      data.subscription.unsubscribe()
+    }
+  }, [forceLocal])
+
+  // Bootstrap when a user session becomes available.
+  useEffect(() => {
+    if (!cloudActive || !sessionUserId) return
+    if (bootstrappedUserId.current === sessionUserId) return
+    bootstrappedUserId.current = sessionUserId
+    void bootstrapCloud()
+  }, [bootstrapCloud, cloudActive, sessionUserId])
+
+  // Realtime updates from the other browser.
+  useEffect(() => {
+    if (!cloudActive || !cloudReady || !sessionUserId) return
+
+    return subscribeToCloudState((remoteState, updatedAt) => {
+      if (lastRemoteUpdatedAt.current && updatedAt <= lastRemoteUpdatedAt.current) return
+      lastRemoteUpdatedAt.current = updatedAt
+      skipNextCloudSave.current = true
+      setState(remoteState)
+      setSyncStatus('saved')
+      setSyncError(null)
+    })
+  }, [cloudActive, cloudReady, sessionUserId])
+
+  // Debounced cloud save. Realtime updates and bootstrap pulls skip this effect.
+  useEffect(() => {
+    if (!cloudActive || !cloudReady || !sessionUserId) return
+
+    if (skipNextCloudSave.current) {
+      skipNextCloudSave.current = false
+      return
+    }
+
+    setSyncStatus('saving')
+    const timeout = window.setTimeout(() => {
+      void saveCloudState(state)
+        .then((updatedAt) => {
+          lastRemoteUpdatedAt.current = updatedAt
+          setSyncStatus('saved')
+          setSyncError(null)
+        })
+        .catch((error) => {
+          setSyncStatus('error')
+          setSyncError(formatCloudError(error))
+        })
+    }, 450)
+
+    return () => window.clearTimeout(timeout)
+  }, [cloudActive, cloudReady, sessionUserId, state])
 
   const metrics = useMemo(() => getMonthMetrics(state, month), [state, month])
 
@@ -196,12 +429,158 @@ export function usePlanner() {
     setState(next)
   }, [])
 
+  const handleSignIn = useCallback(async (email: string, password: string) => {
+    setCloudError(null)
+    setSyncError(null)
+    return signInWithEmail(email, password)
+  }, [])
+
+  const handleSignOut = useCallback(async () => {
+    await signOutFromCloud()
+    setSession(null)
+    setCloudReady(false)
+    setConflict(null)
+    setCloudError(null)
+    setSyncError(null)
+    setSyncStatus('local')
+    setCloudMessage(null)
+    bootstrappedUserId.current = null
+    setTab('calendar')
+    setSelectedDate(null)
+  }, [])
+
+  const resolveConflict = useCallback(
+    async (choice: 'cloud' | 'local') => {
+      if (!conflict) return
+      setConflictBusy(true)
+      setSyncError(null)
+      try {
+        if (choice === 'cloud') {
+          applyRemote(conflict.remote, conflict.remoteUpdatedAt)
+          markCloudLinked()
+          setCloudReady(true)
+          setSyncStatus('saved')
+          setConflict(null)
+        } else {
+          const updatedAt = await saveCloudState(conflict.local)
+          lastRemoteUpdatedAt.current = updatedAt
+          markCloudLinked()
+          skipNextCloudSave.current = true
+          setState(conflict.local)
+          setCloudReady(true)
+          setSyncStatus('saved')
+          setConflict(null)
+          setCloudMessage('Piano locale caricato nel cloud.')
+        }
+      } catch (error) {
+        setSyncStatus('error')
+        setSyncError(formatCloudError(error))
+      } finally {
+        setConflictBusy(false)
+      }
+    },
+    [applyRemote, conflict],
+  )
+
+  const continueLocally = useCallback(() => {
+    setForceLocal(true)
+    setCloudError(null)
+    setConflict(null)
+    setSyncError(null)
+    setCloudReady(true)
+    setSyncStatus('local')
+    setAuthLoading(false)
+  }, [])
+
+  const retryCloud = useCallback(() => {
+    setForceLocal(false)
+    setCloudError(null)
+    setSyncError(null)
+    setCloudReady(false)
+    setAuthLoading(true)
+    setSyncStatus('loading')
+    bootstrappedUserId.current = null
+  }, [])
+
+  const retry = useCallback(() => {
+    setCloudError(null)
+    setSyncError(null)
+    if (sessionUserId) {
+      bootstrappedUserId.current = null
+      void bootstrapCloud()
+    } else {
+      window.location.reload()
+    }
+  }, [bootstrapCloud, sessionUserId])
+
+  const syncNow = useCallback(async () => {
+    if (!cloudActive || !cloudReady || !sessionUserId) return
+    setSyncStatus('saving')
+    setSyncError(null)
+    try {
+      const updatedAt = await saveCloudState(stateRef.current)
+      lastRemoteUpdatedAt.current = updatedAt
+      setSyncStatus('saved')
+    } catch (error) {
+      setSyncStatus('error')
+      setSyncError(formatCloudError(error))
+    }
+  }, [cloudActive, cloudReady, sessionUserId])
+
+  const reloadCloud = useCallback(async () => {
+    if (!cloudActive || !sessionUserId) return
+    setSyncStatus('loading')
+    setSyncError(null)
+    try {
+      const remote = await loadCloudState()
+      if (!remote.state) {
+        setCloudMessage('Nessun piano presente nel cloud.')
+        setSyncStatus('saved')
+        return
+      }
+      applyRemote(remote.state, remote.updatedAt)
+      markCloudLinked()
+      setCloudReady(true)
+      setSyncStatus('saved')
+    } catch (error) {
+      setSyncStatus('error')
+      setSyncError(formatCloudError(error))
+    }
+  }, [applyRemote, cloudActive, sessionUserId])
+
+  const dismissMessage = useCallback(() => setCloudMessage(null), [])
+
+  const cloud: CloudController = {
+    configured: isSupabaseConfigured,
+    active: cloudActive,
+    ready: cloudReady,
+    authLoading,
+    sessionEmail: session?.user.email ?? null,
+    syncStatus,
+    error: cloudError,
+    syncError,
+    conflict,
+    conflictBusy,
+    message: cloudMessage,
+    forceLocal,
+    signIn: handleSignIn,
+    signOut: handleSignOut,
+    retry,
+    resolveConflict,
+    continueLocally,
+    retryCloud,
+    syncNow,
+    reloadCloud,
+    dismissMessage,
+  }
+
   return {
     state,
     month,
     tab,
     selectedDate,
     metrics,
+    cloud,
     setTab,
     setMonth: navigateMonth,
     goToPreviousMonth,
