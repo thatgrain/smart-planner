@@ -42,9 +42,11 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 ## Funzionalità
 
 - Calendario mensile con notti, presenze proposte, smart working, assenze e festivi.
+- Giorni del mese precedente e successivo visibili ma attenuati e in sola lettura: un click porta al mese corretto.
+- Numero della settimana ISO (WK) nella griglia e nell'agenda mobile.
 - Dettaglio giornata con assegnazione notte, conferma/esclusione presenza e gestione eccezioni.
 - Settimana tipo modificabile e applicabile al mese o ai prossimi 12 mesi.
-- Assenze: ferie, malattia, permesso/ROL, chiusura aziendale.
+- Assenze: ferie, malattia, permesso/ROL, chiusura aziendale, con modifica dei periodi già registrati.
 - Festivi nazionali italiani precompilati (incluso il lunedì dell'Angelo) e festivi personalizzati.
 - Riepilogo mensile per persona: giorni eleggibili, presenze, SW, percentuale, margine, notti, eccezioni e notti non sfruttate.
 - Avvisi automatici: limite superato, notti non sfruttate, presenze senza notte, notti durante assenze.
@@ -224,6 +226,7 @@ Sopra il calendario resta solo una striscia compatta con:
 - smart working e presenze di Grano e Pietro;
 - stato del limite;
 - avvisi;
+- separatori **WK** per settimana ISO;
 - pulsante **Dettagli**.
 
 Le card complete, gli avvisi estesi, la legenda e le note didattiche sono disponibili dietro **Dettagli** o restano visibili su desktop.
@@ -329,6 +332,8 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - settimana tipo e giorno di passaggio;
 - calcolo stretto del 50%;
 - assenze individuali/collettive, festivi e weekend;
+- modifica di un'assenza esistente con ricalcolo dei giorni eleggibili;
+- settimane ISO e giorni adiacenti nella griglia del mese;
 - eccezioni, notti non sfruttate e notti a cavallo del mese;
 - diff delle novità per notti, presenze manuali, assenze, festivi, pattern, profili e impostazioni;
 - salvataggio e validazione della fotografia locale delle novità;

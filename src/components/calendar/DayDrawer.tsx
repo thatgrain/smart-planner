@@ -289,7 +289,7 @@ export function DayDrawer({
         <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 px-5 py-3">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[10px] text-slate-400 dark:text-slate-500">
-              Le modifiche riportano il mese in bozza.
+              Le modifiche vengono sincronizzate con il piano condiviso.
             </span>
             <Button variant="secondary" size="sm" onClick={onClose}>
               Chiudi

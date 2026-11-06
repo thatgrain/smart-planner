@@ -6,6 +6,7 @@ import {
   endOfMonth,
   format,
   getISODay,
+  getISOWeek,
   isSameDay,
   parseISO,
   startOfMonth,
@@ -58,6 +59,11 @@ export function addMonthsToMonthKey(month: string, amount: number): string {
 
 export function isoWeekday(key: string): number {
   return getISODay(parseISO(key))
+}
+
+/** ISO 8601 week number (weeks start on Monday). */
+export function isoWeekNumber(key: string): number {
+  return getISOWeek(parseISO(key))
 }
 
 export function isWeekendKey(key: string, weekendDays: number[]): boolean {

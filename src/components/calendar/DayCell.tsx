@@ -16,7 +16,9 @@ import {
   addDaysKey,
   formatDayLong,
   formatDayNumber,
+  formatMonthLabel,
   isTodayKey,
+  monthKeyOf,
 } from '../../lib/domain/dates'
 import {
   ABSENCE_SHORT_LABELS,
@@ -43,9 +45,17 @@ interface DayCellProps {
   state: PlannerState
   selected: boolean
   onOpen: (date: string) => void
+  onNavigateMonth: (month: string) => void
 }
 
-export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps) {
+export function DayCell({
+  date,
+  inMonth,
+  state,
+  selected,
+  onOpen,
+  onNavigateMonth,
+}: DayCellProps) {
   const dayNumber = formatDayNumber(date)
   const today = isTodayKey(date)
   const holiday = getHoliday(state, date)
@@ -77,7 +87,7 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
   ]
   const hasAbsence = collectiveAbsences.length > 0 || personalAbsences.length > 0
   const showFreeNight =
-    !nightPerson && !weekend && !holiday && collectiveAbsences.length === 0
+    inMonth && !nightPerson && !weekend && !holiday && collectiveAbsences.length === 0
 
   const ariaParts = [formatDayLong(date)]
   if (nightPerson) ariaParts.push(`notte di ${nightPerson.name}`)
@@ -85,32 +95,33 @@ export function DayCell({ date, inMonth, state, selected, onOpen }: DayCellProps
   if (smartPeople.length > 0)
     ariaParts.push(`smart working: ${smartPeople.map((p) => p.name).join(', ')}`)
 
-  if (!inMonth) {
-    return (
-      <button
-        type="button"
-        onClick={() => onOpen(date)}
-        aria-label={`Vai a ${formatDayLong(date)}`}
-        className="min-h-[124px] border-r border-b border-slate-100/70 dark:border-slate-800/70 bg-slate-50/40 dark:bg-slate-900/40 p-2 text-left text-[11px] text-slate-300 dark:text-slate-600 transition hover:bg-slate-100/60 dark:hover:bg-slate-800/60"
-      >
-        {dayNumber}
-      </button>
-    )
-  }
-
   return (
     <button
       type="button"
-      onClick={() => onOpen(date)}
-      aria-label={ariaParts.join(' · ')}
+      onClick={() => (inMonth ? onOpen(date) : onNavigateMonth(monthKeyOf(date)))}
+      aria-label={
+        inMonth
+          ? ariaParts.join(' · ')
+          : `Vai a ${formatMonthLabel(monthKeyOf(date))}: ${ariaParts.join(' · ')}`
+      }
+      title={
+        inMonth
+          ? undefined
+          : `Mese adiacente · clicca per aprire ${formatMonthLabel(monthKeyOf(date))}`
+      }
       className={cn(
-        'group relative flex min-h-[124px] flex-col gap-1.5 border-r border-b border-slate-200/80 dark:border-slate-800/80 p-2 text-left transition-colors',
-        weekend ? 'bg-slate-50/70 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900',
-        holiday && 'bg-rose-50/60 dark:bg-rose-950/30',
-        collectiveAbsences.length > 0 && 'bg-rose-50/40 dark:bg-rose-950/20',
-        selected
-          ? 'z-10 ring-2 ring-indigo-500 ring-inset'
-          : 'hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20',
+        'group relative flex min-h-[124px] flex-col gap-1.5 border-r border-b p-2 text-left transition-colors',
+        inMonth
+          ? cn(
+              'border-slate-200/80 dark:border-slate-800/80',
+              weekend ? 'bg-slate-50/70 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900',
+              holiday && 'bg-rose-50/60 dark:bg-rose-950/30',
+              collectiveAbsences.length > 0 && 'bg-rose-50/40 dark:bg-rose-950/20',
+              selected
+                ? 'z-10 ring-2 ring-indigo-500 ring-inset'
+                : 'hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20',
+            )
+          : 'border-slate-100/70 bg-slate-50/40 text-slate-500 opacity-[0.55] saturate-50 hover:bg-slate-100/70 hover:opacity-[0.7] dark:border-slate-800/70 dark:bg-slate-900/40 dark:hover:bg-slate-800/50',
       )}
     >
       <div className="flex items-start justify-between gap-1">

@@ -18,6 +18,7 @@ import {
   setNight,
   syncAutoPresence,
   togglePresence,
+  updateAbsence,
 } from './state'
 import type { PlannerState } from './types'
 
@@ -188,6 +189,49 @@ describe('assenze, festivi e weekend', () => {
     expect(isEligible(state, 'B', '2026-11-02')).toBe(true)
     expect(getPersonMetrics(state, 'A', NOVEMBER).eligibleCount).toBe(19)
     expect(getPersonMetrics(state, 'B', NOVEMBER).eligibleCount).toBe(21)
+  })
+
+  it('modifica un’assenza esistente mantenendo id e ricalcolando i giorni', () => {
+    let state = setNight(baseState(), '2026-11-02', 'A')
+    state = addAbsence(state, {
+      id: 'vacation-1',
+      personId: 'A',
+      type: 'vacation',
+      start: '2026-11-02',
+      end: '2026-11-03',
+    })
+
+    expect(isPersonPresent(state, 'A', '2026-11-02')).toBe(false)
+
+    state = updateAbsence(state, 'vacation-1', {
+      personId: 'B',
+      type: 'sick',
+      start: '2026-11-16',
+      end: '2026-11-17',
+      note: '  visita medica  ',
+    })
+
+    expect(state.absences).toHaveLength(1)
+    expect(state.absences[0]).toMatchObject({
+      id: 'vacation-1',
+      personId: 'B',
+      type: 'sick',
+      start: '2026-11-16',
+      end: '2026-11-17',
+      note: 'visita medica',
+    })
+    expect(isEligible(state, 'A', '2026-11-02')).toBe(true)
+    expect(isPersonPresent(state, 'A', '2026-11-02')).toBe(true)
+    expect(isEligible(state, 'B', '2026-11-16')).toBe(false)
+    expect(isEligible(state, 'A', '2026-11-16')).toBe(true)
+    expect(
+      updateAbsence(state, 'vacation-1', {
+        personId: 'B',
+        type: 'sick',
+        start: '2026-11-20',
+        end: '2026-11-19',
+      }),
+    ).toBe(state)
   })
 
   it('esclude le chiusure collettive e i festivi per entrambi', () => {

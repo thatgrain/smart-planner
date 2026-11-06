@@ -23,6 +23,7 @@ import {
   resetPresenceForDay,
   setNight,
   togglePresence,
+  updateAbsence,
   updatePattern,
   updatePerson,
   updateSettings,
@@ -504,6 +505,21 @@ export function usePlanner() {
     [applyLocal],
   )
 
+  const handleUpdateAbsence = useCallback(
+    (absenceId: string, input: AddAbsenceInput) => {
+      applyLocal((current) =>
+        updateAbsence(current, absenceId, {
+          personId: input.personId,
+          type: input.type,
+          start: input.start,
+          end: input.end,
+          note: input.note?.trim() || undefined,
+        }),
+      )
+    },
+    [applyLocal],
+  )
+
   const handleRemoveAbsence = useCallback(
     (absenceId: string) => {
       applyLocal((current) => removeAbsence(current, absenceId))
@@ -792,6 +808,7 @@ export function usePlanner() {
       applyPattern: handleApplyPattern,
       applyPatternToNextMonths: handleApplyPatternToNextMonths,
       addAbsence: handleAddAbsence,
+      updateAbsence: handleUpdateAbsence,
       removeAbsence: handleRemoveAbsence,
       addHoliday: handleAddHoliday,
       removeHoliday: handleRemoveHoliday,

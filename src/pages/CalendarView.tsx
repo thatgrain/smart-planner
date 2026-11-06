@@ -13,7 +13,8 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 
 export function CalendarView({ controller }: { controller: PlannerController }) {
-  const { state, month, metrics, selectedDate, openDay, closeDay, actions, setTab } = controller
+  const { state, month, metrics, selectedDate, openDay, closeDay, actions, setTab, setMonth } =
+    controller
   const [detailsOpen, setDetailsOpen] = useState(false)
   const detailsRef = useRef<HTMLDivElement>(null)
 
@@ -86,6 +87,7 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
             month={month}
             selectedDate={selectedDate}
             onOpenDay={openDay}
+            onNavigateMonth={setMonth}
           />
         </div>
         <div className="md:hidden">

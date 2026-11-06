@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import {
   AlertTriangle,
   ArrowRightLeft,
@@ -19,6 +20,7 @@ import {
   formatDayNumber,
   isTodayKey,
   isoWeekday,
+  isoWeekNumber,
   weekdayName,
 } from '../../lib/domain/dates'
 import {
@@ -54,7 +56,10 @@ export function CalendarAgenda({
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-soft">
       <div className="divide-y divide-slate-100 dark:divide-slate-800">
-        {daysInMonth(month).map((date) => {
+        {daysInMonth(month).map((date, index, allDates) => {
+          const weekNumber = isoWeekNumber(date)
+          const showWeekHeader =
+            index === 0 || isoWeekNumber(allDates[index - 1]) !== weekNumber
           const today = isTodayKey(date)
           const weekend = isWeekend(state, date)
           const holiday = getHoliday(state, date)
@@ -202,19 +207,28 @@ export function CalendarAgenda({
             </>
           )
 
-          return readOnly ? (
-            <div key={date} className={rowClassName}>
-              {content}
-            </div>
-          ) : (
-            <button
-              key={date}
-              type="button"
-              onClick={() => onOpenDay(date)}
-              className={rowClassName}
-            >
-              {content}
-            </button>
+          return (
+            <Fragment key={date}>
+              {showWeekHeader ? (
+                <div className="flex items-center gap-2 bg-slate-50/80 px-3 py-1 dark:bg-slate-900/80">
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
+                    WK {weekNumber}
+                  </span>
+                  <span className="h-px flex-1 bg-slate-200/70 dark:bg-slate-800/70" />
+                </div>
+              ) : null}
+              {readOnly ? (
+                <div className={rowClassName}>{content}</div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onOpenDay(date)}
+                  className={rowClassName}
+                >
+                  {content}
+                </button>
+              )}
+            </Fragment>
           )
         })}
       </div>

@@ -4,10 +4,12 @@ import {
   FileText,
   Info,
   Lock,
+  Pencil,
   Plus,
   Thermometer,
   Trash2,
   Umbrella,
+  X,
 } from 'lucide-react'
 import type { PlannerController } from '../hooks/usePlanner'
 import { cn } from '../lib/cn'
@@ -19,7 +21,7 @@ import {
   todayKey,
 } from '../lib/domain/dates'
 import { ABSENCE_LABELS, getPerson } from '../lib/domain/eligibility'
-import type { AbsenceType, PersonId } from '../lib/domain/types'
+import type { Absence, AbsenceType, PersonId } from '../lib/domain/types'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -43,6 +45,7 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteAbsenceId, setDeleteAbsenceId] = useState<string | null>(null)
   const [deleteHolidayDate, setDeleteHolidayDate] = useState<string | null>(null)
   const [holidayDate, setHolidayDate] = useState(`${month}-01`)
@@ -75,6 +78,29 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
     else if (person === 'both') setPerson('A')
   }
 
+  const startEdit = (absence: Absence) => {
+    setEditingId(absence.id)
+    setPerson(absence.personId ?? 'both')
+    setType(absence.type)
+    setStart(absence.start)
+    setEnd(absence.end)
+    setNote(absence.note ?? '')
+    setError(null)
+    setMessage(null)
+    window.setTimeout(() => {
+      document.getElementById('absence-form')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }, 50)
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setError(null)
+    setNote('')
+  }
+
   const submitAbsence = () => {
     setError(null)
     setMessage(null)
@@ -86,17 +112,29 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
       setError('La data di fine non può precedere quella di inizio.')
       return
     }
-    actions.addAbsence({
+
+    const input = {
       personId: person === 'both' ? null : person,
       type,
       start,
       end,
       note,
-    })
+    }
+
+    if (editingId) {
+      actions.updateAbsence(editingId, input)
+      setEditingId(null)
+      setMessage(
+        `${ABSENCE_LABELS[type]} aggiornata${person === 'both' ? ' per entrambi' : ` per ${getPerson(state, person).name}`}.`,
+      )
+    } else {
+      actions.addAbsence(input)
+      setMessage(
+        `${ABSENCE_LABELS[type]} aggiunta${person === 'both' ? ' per entrambi' : ` per ${getPerson(state, person).name}`}.`,
+      )
+    }
+
     setNote('')
-    setMessage(
-      `${ABSENCE_LABELS[type]} aggiunta${person === 'both' ? ' per entrambi' : ` per ${getPerson(state, person).name}`}.`,
-    )
   }
 
   const submitHoliday = () => {
@@ -136,10 +174,14 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="p-5">
+        <Card id="absence-form" className="scroll-mt-20 p-5">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Nuova assenza</h3>
-            <Badge variant="info">Individuale o collettiva</Badge>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">
+              {editingId ? 'Modifica assenza' : 'Nuova assenza'}
+            </h3>
+            <Badge variant={editingId ? 'warning' : 'info'}>
+              {editingId ? 'Modifica in corso' : 'Individuale o collettiva'}
+            </Badge>
           </div>
 
           <div className="mt-4 space-y-4">
@@ -244,9 +286,15 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
             ) : null}
 
             <Button variant="primary" className="w-full" onClick={submitAbsence}>
-              <Plus className="h-4 w-4" />
-              Aggiungi assenza
+              {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              {editingId ? 'Salva modifiche' : 'Aggiungi assenza'}
             </Button>
+            {editingId ? (
+              <Button variant="ghost" className="w-full" onClick={cancelEdit}>
+                <X className="h-4 w-4" />
+                Annulla modifica
+              </Button>
+            ) : null}
           </div>
         </Card>
 
@@ -371,14 +419,24 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                     {absence.note ? ` · ${absence.note}` : ''}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setDeleteAbsenceId(absence.id)}
-                  aria-label={`Elimina assenza ${ABSENCE_LABELS[absence.type]}`}
-                  className="rounded-lg p-1.5 text-slate-400 dark:text-slate-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-400"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                <div className="flex shrink-0 items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => startEdit(absence)}
+                    aria-label={`Modifica assenza ${ABSENCE_LABELS[absence.type]} del ${formatRange(absence.start, absence.end)}`}
+                    className="rounded-lg p-1.5 text-slate-400 dark:text-slate-500 transition hover:bg-indigo-50 dark:hover:bg-indigo-950/30 hover:text-indigo-600 dark:hover:text-indigo-400"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteAbsenceId(absence.id)}
+                    aria-label={`Elimina assenza ${ABSENCE_LABELS[absence.type]}`}
+                    className="rounded-lg p-1.5 text-slate-400 dark:text-slate-500 transition hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-600 dark:hover:text-rose-400"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             )
           })}
@@ -405,7 +463,10 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
         open={deleteAbsenceId !== null}
         onClose={() => setDeleteAbsenceId(null)}
         onConfirm={() => {
-          if (deleteAbsenceId) actions.removeAbsence(deleteAbsenceId)
+          if (deleteAbsenceId) {
+            actions.removeAbsence(deleteAbsenceId)
+            if (editingId === deleteAbsenceId) cancelEdit()
+          }
         }}
         title="Eliminare l'assenza?"
         message={

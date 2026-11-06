@@ -224,6 +224,28 @@ export function addAbsence(state: PlannerState, absence: Absence): PlannerState 
   })
 }
 
+export function updateAbsence(
+  state: PlannerState,
+  absenceId: string,
+  updates: Omit<Absence, 'id'>,
+): PlannerState {
+  if (updates.start > updates.end) return state
+  if (!state.absences.some((item) => item.id === absenceId)) return state
+
+  return syncAutoPresence({
+    ...state,
+    absences: state.absences.map((absence) =>
+      absence.id === absenceId
+        ? {
+            ...absence,
+            ...updates,
+            note: updates.note?.trim() || undefined,
+          }
+        : absence,
+    ),
+  })
+}
+
 export function removeAbsence(state: PlannerState, absenceId: string): PlannerState {
   if (!state.absences.some((item) => item.id === absenceId)) return state
   return syncAutoPresence({
