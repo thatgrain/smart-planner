@@ -26,6 +26,7 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { DateField } from '../components/ui/DateField'
 
 const absenceIcons: Record<AbsenceType, typeof Umbrella> = {
   vacation: Umbrella,
@@ -240,24 +241,24 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
                 <label htmlFor="absence-start" className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
                   Dal
                 </label>
-                <input
+                <DateField
                   id="absence-start"
-                  type="date"
+                  label="Dal"
                   value={start}
-                  onChange={(event) => setStart(event.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
+                  onChange={setStart}
+                  className="mt-1.5"
                 />
               </div>
               <div>
                 <label htmlFor="absence-end" className="text-[11px] font-medium text-slate-600 dark:text-slate-400">
                   Al
                 </label>
-                <input
+                <DateField
                   id="absence-end"
-                  type="date"
+                  label="Al"
                   value={end}
-                  onChange={(event) => setEnd(event.target.value)}
-                  className="mt-1.5 h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 text-sm text-slate-700 dark:text-slate-300 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
+                  onChange={setEnd}
+                  className="mt-1.5"
                 />
               </div>
             </div>
@@ -309,12 +310,11 @@ export function AbsencesView({ controller }: { controller: PlannerController }) 
           </p>
 
           <div className="mt-3 grid gap-2 sm:grid-cols-[130px_1fr_auto]">
-            <input
-              type="date"
+            <DateField
+              label="Data festivo"
               value={holidayDate}
-              onChange={(event) => setHolidayDate(event.target.value)}
-              aria-label="Data festivo"
-              className="h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2.5 text-xs text-slate-700 dark:text-slate-300 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900"
+              onChange={setHolidayDate}
+              size="sm"
             />
             <input
               type="text"

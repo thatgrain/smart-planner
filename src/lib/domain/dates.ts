@@ -33,6 +33,47 @@ export function monthKeyOf(value: Date | string): string {
   return typeof value === 'string' ? value.slice(0, 7) : format(value, MONTH_FORMAT)
 }
 
+/** Formats an ISO date (`YYYY-MM-DD`) as the Italian `dd/MM/yyyy`. */
+export function formatItalianDate(key: string): string {
+  const date = parseISO(key)
+  return Number.isNaN(date.getTime()) ? '' : format(date, 'dd/MM/yyyy')
+}
+
+/**
+ * Parses an Italian-style date (`dd/MM/yyyy`, `d/M/yyyy`, also with `-` or `.`
+ * separators) or an ISO date. Returns `YYYY-MM-DD` or `null` when invalid.
+ */
+export function parseItalianDate(value: string): string | null {
+  const normalized = value.trim()
+  const match = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/.exec(normalized)
+
+  if (match) {
+    const day = Number(match[1])
+    const month = Number(match[2])
+    const year = Number(match[3])
+    const date = new Date(year, month - 1, day)
+
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return null
+    }
+
+    return toDateKey(date)
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    const date = parseISO(normalized)
+    return Number.isNaN(date.getTime()) || toDateKey(date) !== normalized
+      ? null
+      : normalized
+  }
+
+  return null
+}
+
 export function currentMonthKey(): string {
   return monthKeyOf(new Date())
 }

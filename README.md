@@ -47,6 +47,7 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 - Dettaglio giornata con assegnazione notte, conferma/esclusione presenza e gestione eccezioni.
 - Settimana tipo modificabile e applicabile al mese o ai prossimi 12 mesi.
 - Assenze: ferie, malattia, permesso/ROL, chiusura aziendale, con modifica dei periodi già registrati.
+- Campi data in formato italiano `gg/mm/aaaa`, con calendario che inizia il lunedì.
 - Festivi nazionali italiani precompilati (incluso il lunedì dell'Angelo) e festivi personalizzati.
 - Riepilogo mensile per persona: giorni eleggibili, presenze, SW, percentuale, margine, notti, eccezioni e notti non sfruttate.
 - Avvisi automatici: limite superato, notti non sfruttate, presenze senza notte, notti durante assenze.
@@ -333,6 +334,7 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - calcolo stretto del 50%;
 - assenze individuali/collettive, festivi e weekend;
 - modifica di un'assenza esistente con ricalcolo dei giorni eleggibili;
+- formato data italiano, validazione e calendario lunedì-first;
 - settimane ISO e giorni adiacenti nella griglia del mese;
 - eccezioni, notti non sfruttate e notti a cavallo del mese;
 - diff delle novità per notti, presenze manuali, assenze, festivi, pattern, profili e impostazioni;
