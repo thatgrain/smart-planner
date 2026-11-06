@@ -13,7 +13,6 @@ import { getItalianHolidaysForYears } from './holidays'
 import type {
   Absence,
   Holiday,
-  MonthInfo,
   PersonId,
   PlannerSettings,
   PlannerState,
@@ -50,23 +49,6 @@ function sortPresence(entries: PresenceEntry[]): PresenceEntry[] {
     (a, b) =>
       a.date.localeCompare(b.date) || a.personId.localeCompare(b.personId),
   )
-}
-
-function markMonthDraft(state: PlannerState, months: string[]): PlannerState {
-  const unique = [...new Set(months.map((month) => month.slice(0, 7)))]
-  const nextMonths = state.months.map((info) =>
-    unique.includes(info.month) && info.status === 'confirmed'
-      ? { ...info, status: 'draft' as const, confirmedAt: undefined, confirmedBy: undefined }
-      : info,
-  )
-
-  for (const month of unique) {
-    if (!nextMonths.some((info) => info.month === month)) {
-      nextMonths.push({ month, status: 'draft' })
-    }
-  }
-
-  return { ...state, months: nextMonths }
 }
 
 /**
@@ -148,8 +130,7 @@ export function setNight(
     nights.push({ date, personId })
   }
 
-  const next = syncAutoPresence({ ...state, nights })
-  return markMonthDraft(next, [monthKeyOf(date), monthKeyOf(addDaysKey(date, 1))])
+  return syncAutoPresence({ ...state, nights })
 }
 
 export function togglePresence(
@@ -194,8 +175,7 @@ export function togglePresence(
     })
   }
 
-  const next = syncAutoPresence({ ...state, presence })
-  return markMonthDraft(next, [monthKeyOf(date)])
+  return syncAutoPresence({ ...state, presence })
 }
 
 export function resetPresenceForDay(
@@ -226,8 +206,7 @@ export function applyPatternToMonth(
     }
   }
 
-  const next = syncAutoPresence({ ...state, nights })
-  return markMonthDraft(next, [month, addMonthsToMonthKey(month, 1)])
+  return syncAutoPresence({ ...state, nights })
 }
 
 export function applyPatternToMonths(
@@ -237,46 +216,20 @@ export function applyPatternToMonths(
   return months.reduce((current, month) => applyPatternToMonth(current, month), state)
 }
 
-export function confirmMonth(
-  state: PlannerState,
-  month: string,
-  confirmedBy = 'Manuale',
-): PlannerState {
-  const confirmedAt = new Date().toISOString()
-  const months = state.months.filter((info) => info.month !== month)
-  months.push({ month, status: 'confirmed', confirmedAt, confirmedBy })
-  return { ...state, months }
-}
-
-export function reopenMonth(state: PlannerState, month: string): PlannerState {
-  const months = state.months.filter((info) => info.month !== month)
-  months.push({ month, status: 'draft' })
-  return { ...state, months }
-}
-
 export function addAbsence(state: PlannerState, absence: Absence): PlannerState {
   if (absence.start > absence.end) return state
-  const next = syncAutoPresence({
+  return syncAutoPresence({
     ...state,
     absences: [...state.absences, absence],
   })
-  return markMonthDraft(
-    next,
-    rangeKeys(absence.start, absence.end).map((date) => monthKeyOf(date)),
-  )
 }
 
 export function removeAbsence(state: PlannerState, absenceId: string): PlannerState {
-  const absence = state.absences.find((item) => item.id === absenceId)
-  if (!absence) return state
-  const next = syncAutoPresence({
+  if (!state.absences.some((item) => item.id === absenceId)) return state
+  return syncAutoPresence({
     ...state,
     absences: state.absences.filter((item) => item.id !== absenceId),
   })
-  return markMonthDraft(
-    next,
-    rangeKeys(absence.start, absence.end).map((date) => monthKeyOf(date)),
-  )
 }
 
 export function addHoliday(state: PlannerState, holiday: Holiday): PlannerState {
@@ -286,26 +239,24 @@ export function addHoliday(state: PlannerState, holiday: Holiday): PlannerState 
       (a, b) => a.date.localeCompare(b.date),
     ),
   })
-  return markMonthDraft(next, [monthKeyOf(holiday.date)])
+  return next
 }
 
 export function removeHoliday(state: PlannerState, date: string): PlannerState {
-  const next = syncAutoPresence({
+  return syncAutoPresence({
     ...state,
     holidays: state.holidays.filter((item) => item.date !== date),
   })
-  return markMonthDraft(next, [monthKeyOf(date)])
 }
 
 export function updateSettings(
   state: PlannerState,
   settings: Partial<PlannerSettings>,
 ): PlannerState {
-  const next = syncAutoPresence({
+  return syncAutoPresence({
     ...state,
     settings: { ...state.settings, ...settings },
   })
-  return markMonthDraft(next, next.months.map((info) => info.month))
 }
 
 export function updatePerson(
@@ -343,7 +294,6 @@ export function createInitialState(now = new Date()): PlannerState {
     holidays: getItalianHolidaysForYears([year, year + 1]),
     settings: { ...DEFAULT_SETTINGS },
     pattern: { ...DEFAULT_PATTERN },
-    months: [],
   }
 
   const current = currentMonthKey()
@@ -377,14 +327,6 @@ export function ensureHolidayYears(state: PlannerState, now = new Date()): Plann
     ...state,
     holidays: [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date)),
   }
-}
-
-export function getMonthInfo(state: PlannerState, month: string): MonthInfo | undefined {
-  return state.months.find((info) => info.month === month)
-}
-
-export function isConfirmed(state: PlannerState, month: string): boolean {
-  return getMonthInfo(state, month)?.status === 'confirmed'
 }
 
 export function hasPersonalAbsence(

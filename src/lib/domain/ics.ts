@@ -8,7 +8,6 @@ import {
   isEligible,
 } from './eligibility'
 import { isPersonPresent } from './coverage'
-import { getMonthStatus } from './metrics'
 import type { PersonId, PlannerState } from './types'
 
 export type IcsFeed = PersonId | 'room'
@@ -65,7 +64,6 @@ export function generateIcs(
     const person = getPerson(state, personId)
 
     for (const month of months) {
-      const status = getMonthStatus(state, month)
       const monthPlanned = hasPlanForMonth(state, month)
 
       for (const date of daysInMonth(month)) {
@@ -74,7 +72,6 @@ export function generateIcs(
         const absence = getPersonalAbsence(state, personId, date)
         const eligible = isEligible(state, personId, date)
         const present = isPersonPresent(state, personId, date)
-        const statusLabel = status === 'confirmed' ? 'piano confermato' : 'bozza'
 
         if (includeAbsences && collective) {
           events.push({
@@ -82,7 +79,7 @@ export function generateIcs(
             date,
             endDate: addDaysKey(date, 1),
             summary: 'Chiusura aziendale',
-            description: `SmartPlanner · ${statusLabel}`,
+            description: 'SmartPlanner',
             categories: 'ASSENZA',
           })
         }
@@ -93,9 +90,7 @@ export function generateIcs(
             date,
             endDate: addDaysKey(date, 1),
             summary: `${ABSENCE_LABELS[absence.type]} – ${person.name}`,
-            description: absence.note
-              ? `SmartPlanner · ${absence.note}`
-              : `SmartPlanner · ${statusLabel}`,
+            description: absence.note ? `SmartPlanner · ${absence.note}` : 'SmartPlanner',
             categories: 'ASSENZA',
           })
         }
@@ -119,7 +114,7 @@ export function generateIcs(
             date,
             endDate: addDaysKey(date, 1),
             summary: `Ufficio – ${person.name}`,
-            description: `SmartPlanner · ${statusLabel} · ${formatDayShort(date)}`,
+            description: `SmartPlanner · ${formatDayShort(date)}`,
             categories: 'UFFICIO',
           })
         } else if (monthPlanned) {
@@ -128,7 +123,7 @@ export function generateIcs(
             date,
             endDate: addDaysKey(date, 1),
             summary: `Smart working – ${person.name}`,
-            description: `SmartPlanner · ${statusLabel} · ${formatDayShort(date)}`,
+            description: `SmartPlanner · ${formatDayShort(date)}`,
             categories: 'SMART WORKING',
           })
         }
@@ -153,9 +148,7 @@ export function generateIcs(
   ]
 
   for (const event of events) {
-    const description =
-      event.description ??
-      `SmartPlanner · ${getMonthStatus(state, monthKeyOf(event.date)) === 'confirmed' ? 'piano confermato' : 'bozza'}`
+    const description = event.description ?? 'SmartPlanner'
     lines.push(
       'BEGIN:VEVENT',
       `UID:${event.uid}`,
@@ -176,9 +169,6 @@ export function generateIcs(
 }
 
 function hasPlanForMonth(state: PlannerState, month: string): boolean {
-  if (state.months.some((info) => info.month === month && info.status === 'confirmed')) {
-    return true
-  }
   if (state.nights.some((night) => monthKeyOf(night.date) === month && night.personId)) {
     return true
   }

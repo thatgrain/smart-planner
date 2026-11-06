@@ -6,7 +6,6 @@ import { getItalianHolidays } from './holidays'
 import { generateIcs } from './ics'
 import {
   getMonthMetrics,
-  getMonthStatus,
   getPersonMetrics,
   getPersonWarnings,
 } from './metrics'
@@ -15,7 +14,6 @@ import {
   addHoliday,
   applyPatternToMonth,
   createInitialState,
-  confirmMonth,
   resetPresenceForDay,
   setNight,
   syncAutoPresence,
@@ -36,7 +34,6 @@ function baseState(): PlannerState {
     nights: [],
     presence: [],
     absences: [],
-    months: [],
     holidays: [...getItalianHolidays(2026), ...getItalianHolidays(2027)],
   }
 }
@@ -256,19 +253,6 @@ describe('eccezioni e avvisi', () => {
 
     expect(metrics.usefulNights).toHaveLength(1)
     expect(metrics.wastedNights).toHaveLength(0)
-  })
-})
-
-describe('conferma del mese', () => {
-  it('conferma e riapre il mese quando viene modificato', () => {
-    let state = applyPatternToMonth(baseState(), NOVEMBER)
-    state = confirmMonth(state, NOVEMBER)
-
-    expect(getMonthStatus(state, NOVEMBER)).toBe('confirmed')
-    expect(getMonthMetrics(state, NOVEMBER).warnings.some((warning) => warning.id.startsWith('draft-'))).toBe(false)
-
-    state = setNight(state, '2026-11-02', 'B')
-    expect(getMonthStatus(state, NOVEMBER)).toBe('draft')
   })
 })
 

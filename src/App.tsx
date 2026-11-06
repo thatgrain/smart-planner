@@ -7,6 +7,9 @@ import { LoginPage } from './components/cloud/LoginPage'
 import { Footer } from './components/layout/Footer'
 import { Header } from './components/layout/Header'
 import { TabBar } from './components/layout/TabBar'
+import { ChangesBanner } from './components/notifications/ChangesBanner'
+import { ChangesModal } from './components/notifications/ChangesModal'
+import { ChangesToast } from './components/notifications/ChangesToast'
 import { InstallBanner } from './components/pwa/InstallBanner'
 import { Button } from './components/ui/Button'
 import { usePlanner } from './hooks/usePlanner'
@@ -25,6 +28,7 @@ export default function App() {
     tab,
     metrics,
     cloud,
+    notifications,
     setTab,
     goToPreviousMonth,
     goToNextMonth,
@@ -79,17 +83,26 @@ export default function App() {
     <div className="flex min-h-svh flex-col">
       <Header
         month={month}
-        status={metrics.status}
         onPreviousMonth={goToPreviousMonth}
         onNextMonth={goToNextMonth}
         onToday={goToToday}
         cloud={cloud}
+        notifications={{
+          count: notifications.count,
+          onOpen: () => notifications.open(),
+        }}
       />
       <TabBar
         active={tab}
         onChange={setTab}
         warningCount={warningCount}
         absenceCount={state.absences.length}
+      />
+
+      <ChangesBanner
+        changes={notifications.unread}
+        onOpen={() => notifications.open()}
+        onDismiss={notifications.dismiss}
       />
 
       {cloud.active && cloud.ready && cloud.syncError ? (
@@ -142,6 +155,17 @@ export default function App() {
 
       <Footer cloud={cloud} />
       <InstallBanner />
+
+      <ChangesModal
+        open={notifications.modalOpen}
+        changes={notifications.modalChanges}
+        onClose={notifications.close}
+      />
+      <ChangesToast
+        changes={notifications.toast}
+        onOpen={() => notifications.open(notifications.toast ?? undefined)}
+        onDismiss={notifications.dismissToast}
+      />
     </div>
   )
 }

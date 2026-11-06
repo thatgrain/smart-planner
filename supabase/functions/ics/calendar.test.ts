@@ -29,7 +29,6 @@ function state(): FeedState {
     ],
     absences: [],
     holidays: [],
-    months: [{ month: NOVEMBER, status: 'draft' }],
     settings: { weekendDays: [6, 7] },
   }
 }
@@ -87,7 +86,6 @@ describe('feed ICS Edge Function', () => {
 
   it('non esporta smart working in un mese senza piano', () => {
     const current = state()
-    current.months = []
     current.nights = []
     current.presence = []
 

@@ -45,7 +45,6 @@ const state: PlannerState = {
     timezone: 'Europe/Rome',
   },
   pattern: { 1: 'A', 2: 'A', 3: 'B', 4: 'B', 5: null, 6: null, 7: null },
-  months: [{ month: NOVEMBER, status: 'draft' }],
 }
 
 describe('coerenza feed frontend / Edge Function', () => {

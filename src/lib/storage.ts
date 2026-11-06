@@ -21,7 +21,6 @@ export function isPlannerState(value: unknown): value is PlannerState {
     Array.isArray(state.presence) &&
     Array.isArray(state.absences) &&
     Array.isArray(state.holidays) &&
-    Array.isArray(state.months) &&
     Boolean(state.settings) &&
     Boolean(state.pattern)
   )
@@ -39,7 +38,9 @@ function migrateDefaultNames(state: PlannerState): PlannerState {
 }
 
 export function normaliseState(state: PlannerState): PlannerState {
-  const migrated = migrateDefaultNames(state)
+  const clean = { ...state } as PlannerState & { months?: unknown }
+  delete clean.months
+  const migrated = migrateDefaultNames(clean)
   const withHolidays = ensureHolidayYears(migrated)
   return syncAutoPresence(withHolidays)
 }

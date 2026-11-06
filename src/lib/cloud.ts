@@ -36,7 +36,7 @@ interface PlannerStateRow {
   updated_at: string | null
 }
 
-const projectRef = (() => {
+export const cloudProjectRef = (() => {
   try {
     return new URL(import.meta.env.VITE_SUPABASE_URL ?? '').hostname.split('.')[0]
   } catch {
@@ -44,7 +44,7 @@ const projectRef = (() => {
   }
 })()
 
-const CLOUD_LINKED_KEY = `smartplanner.cloud.${projectRef}.linked.v1`
+const CLOUD_LINKED_KEY = `smartplanner.cloud.${cloudProjectRef}.linked.v1`
 
 export function isCloudLinked(): boolean {
   if (typeof window === 'undefined') return false

@@ -48,7 +48,7 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 - Festivi nazionali italiani precompilati (incluso il lunedì dell'Angelo) e festivi personalizzati.
 - Riepilogo mensile per persona: giorni eleggibili, presenze, SW, percentuale, margine, notti, eccezioni e notti non sfruttate.
 - Avvisi automatici: limite superato, notti non sfruttate, presenze senza notte, notti durante assenze.
-- Conferma/riapertura del mese.
+- Novità in-app: riepilogo delle modifiche fatte dall'altra persona dall'ultimo accesso, con banner, campanella e dettaglio per categoria.
 - Login email/password con Supabase Auth.
 - Database condiviso con Row Level Security e allowlist delle due email.
 - Sincronizzazione realtime tra i due browser.
@@ -169,6 +169,17 @@ Al primo login:
 
 Le modifiche vengono salvate con un debounce di circa 450 ms e propagate all'altro browser via Realtime. In caso di errore di salvataggio, l'app avvisa e mantiene le modifiche in locale; **Sincronizza ora** riprova.
 
+## Novità in-app
+
+L'app mostra le modifiche fatte dall'altra persona dall'ultimo accesso senza usare servizi esterni (niente email, Web Push o Brevo).
+
+- A ogni modifica locale viene aggiornata una fotografia del piano in `localStorage`, separata per utente e per dispositivo (`smartplanner.lastSeen.v1.<project>.<email>`).
+- All'apertura, la fotografia precedente viene confrontata con il piano cloud: le differenze diventano un banner **Novità** con il conteggio per categoria.
+- La campanella nell'header riapre il riepilogo; il pulsante **Mostra** apre il dettaglio di notti, presenze manuali, assenze, festivi, settimana tipo, profili e impostazioni.
+- Se una modifica remota arriva mentre l'app è visibile, compare un toast e la novità è considerata già vista. Se arriva a scheda nascosta, resta non letta fino alla riapertura.
+- La fotografia è solo un riferimento locale: il cloud resta l'unica fonte di verità. Svuotare i dati del sito azzera anche lo storico delle novità.
+- Non vengono inviate notifiche quando l'app è chiusa: è una scelta voluta per evitare servizi esterni e costi aggiuntivi.
+
 ## Deploy su GitHub Pages
 
 Il progetto è già configurato con:
@@ -213,7 +224,6 @@ Sopra il calendario resta solo una striscia compatta con:
 - smart working e presenze di Grano e Pietro;
 - stato del limite;
 - avvisi;
-- stato mese con pulsante **Conferma**;
 - pulsante **Dettagli**.
 
 Le card complete, gli avvisi estesi, la legenda e le note didattiche sono disponibili dietro **Dettagli** o restano visibili su desktop.
@@ -265,7 +275,7 @@ Il pulsante **Rigenera** cambia il token: il vecchio URL smette di funzionare e 
 
 Il download copre i prossimi 12 mesi a partire dal mese visualizzato. Gli eventi sono giornalieri e non bloccano gli orari. Per Google Calendar: **Impostazioni → Importa ed esporta → Importa**, seleziona il file `.ics` e il calendario di destinazione. Il file è un'istantanea: dopo una modifica va riscaricato e reimportato.
 
-In entrambi i casi, i mesi senza notti, assenze o piano confermato esportano solo le presenze esplicite.
+In entrambi i casi, i mesi senza notti o assenze esportano solo le presenze esplicite.
 
 ## Backup
 
@@ -282,6 +292,7 @@ src/
     calendar/     calendario, agenda mobile, dettaglio giorno, avvisi
     cloud/        login, loading, errore, conflitto locale/cloud
     layout/       header, tab, footer
+    notifications/ banner, modale e toast delle novità
     pwa/          banner e card di installazione
     settings/     scelta tema
     summary/      riepiloghi per persona e per mese
@@ -293,7 +304,8 @@ src/
   lib/
     cloud.ts          client Supabase, load/save/realtime, errori
     cloud-bootstrap.ts scelta locale/cloud al primo accesso
-    domain/           regole di dominio, date, festivi, metriche, ICS
+    lastSeen.ts       fotografia locale per le novità
+    domain/           regole di dominio, date, festivi, metriche, ICS, diff
     storage.ts        persistenza locale, validazione e backup
     supabase.ts       inizializzazione client
   pages/          calendario, offline, settimana tipo, assenze, ICS, impostazioni
@@ -318,7 +330,8 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 - calcolo stretto del 50%;
 - assenze individuali/collettive, festivi e weekend;
 - eccezioni, notti non sfruttate e notti a cavallo del mese;
-- conferma/riapertura del mese;
+- diff delle novità per notti, presenze manuali, assenze, festivi, pattern, profili e impostazioni;
+- salvataggio e validazione della fotografia locale delle novità;
 - generazione ICS, escaping e feed stanza;
 - generatore ICS della Edge Function (feed in abbonamento);
 - decisione di bootstrap locale/cloud;
@@ -337,4 +350,4 @@ La logica di dominio è separata dall'interfaccia ed è coperta da test:
 
 ## Prossime fasi
 
-- **Fase 5 — Rifiniture:** export CSV, auto-proposta del piano, PWA, notifiche.
+- **Fase 5 — Rifiniture:** export CSV, auto-proposta del piano e ulteriori rifiniture PWA.

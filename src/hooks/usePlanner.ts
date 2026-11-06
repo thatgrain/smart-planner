@@ -5,17 +5,21 @@ import {
   currentMonthKey,
   monthKeyOf,
 } from '../lib/domain/dates'
+import {
+  diffPlannerStates,
+  mergeChangeSummaries,
+  totalChanges,
+  type PlanChangeSummary,
+} from '../lib/domain/changes'
 import { getMonthMetrics } from '../lib/domain/metrics'
 import {
   addAbsence,
   addHoliday,
   applyPatternToMonth,
   applyPatternToMonths,
-  confirmMonth,
   createInitialState,
   removeAbsence,
   removeHoliday,
-  reopenMonth,
   resetPresenceForDay,
   setNight,
   togglePresence,
@@ -46,6 +50,7 @@ import {
 } from '../lib/cloud'
 import { decideBootstrap } from '../lib/cloud-bootstrap'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import { loadLastSeen, saveLastSeen } from '../lib/lastSeen'
 import {
   clearStoredState,
   hasStoredState,
@@ -107,6 +112,11 @@ export function usePlanner() {
   const [tab, setTab] = useState<PlannerTab>('calendar')
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
+  const [unreadChanges, setUnreadChanges] = useState<PlanChangeSummary[]>([])
+  const [changesModalData, setChangesModalData] = useState<PlanChangeSummary[]>([])
+  const [changesOpen, setChangesOpen] = useState(false)
+  const [changeToast, setChangeToast] = useState<PlanChangeSummary[] | null>(null)
+
   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(isSupabaseConfigured)
   const [cloudReady, setCloudReady] = useState(!isSupabaseConfigured)
@@ -133,10 +143,24 @@ export function usePlanner() {
 
   const cloudActive = isSupabaseConfigured && !forceLocal
   const sessionUserId = session?.user.id ?? null
+  const sessionEmail = session?.user.email?.trim().toLowerCase() ?? null
+  const notificationScope = sessionEmail ?? sessionUserId ?? 'local'
+  const notificationScopeRef = useRef(notificationScope)
+  const unreadOrigin = useRef<'open' | 'hidden' | null>(null)
 
   useEffect(() => {
     stateRef.current = state
   }, [state])
+
+  useEffect(() => {
+    notificationScopeRef.current = notificationScope
+  }, [notificationScope])
+
+  useEffect(() => {
+    if (!changeToast) return
+    const timeout = window.setTimeout(() => setChangeToast(null), 7000)
+    return () => window.clearTimeout(timeout)
+  }, [changeToast])
 
   // Local cache: keep a copy in the browser (also useful for offline/backup).
   // Before the first cloud bootstrap, do not persist the auto-generated initial
@@ -146,12 +170,74 @@ export function usePlanner() {
     saveState(state)
   }, [cloudActive, cloudReady, state])
 
-  const applyRemote = useCallback((remoteState: PlannerState, updatedAt: string | null) => {
-    lastRemoteUpdatedAt.current = updatedAt
-    skipNextCloudSave.current = true
-    setState(remoteState)
-    saveState(remoteState)
-  }, [])
+  const processIncomingState = useCallback(
+    (
+      remoteState: PlannerState,
+      updatedAt: string | null,
+      mode: 'open' | 'live',
+    ) => {
+      const scope = notificationScopeRef.current
+      const previous = loadLastSeen(scope)
+      const changes = previous ? diffPlannerStates(previous, remoteState) : []
+      const isVisible =
+        typeof document === 'undefined' || document.visibilityState === 'visible'
+
+      if (mode === 'open') {
+        // Opening the app is the moment "changes since last open" is computed:
+        // the new snapshot becomes the baseline and unseen changes go to the banner.
+        saveLastSeen(scope, remoteState)
+        if (changes.length > 0) {
+          setUnreadChanges(changes)
+          unreadOrigin.current = 'open'
+        }
+      } else if (isVisible) {
+        // While the app is visible, changes are shown immediately as a toast and
+        // considered seen, so they do not pile up in the notification bell.
+        saveLastSeen(scope, remoteState)
+        if (changes.length > 0) {
+          setChangeToast(changes)
+          setUnreadChanges([])
+          unreadOrigin.current = null
+        }
+      } else if (changes.length > 0) {
+        // Hidden tab: do not advance the snapshot, otherwise closing the app
+        // before reopening would lose the notification entirely. Two hidden
+        // updates are diffed from the same baseline, so the newest diff already
+        // includes the previous one and must replace it instead of adding up.
+        const shouldMerge = unreadOrigin.current !== 'hidden'
+        setUnreadChanges((current) =>
+          shouldMerge && current.length > 0
+            ? mergeChangeSummaries(current, changes)
+            : changes,
+        )
+        unreadOrigin.current = 'hidden'
+      }
+
+      lastRemoteUpdatedAt.current = updatedAt
+      skipNextCloudSave.current = true
+      stateRef.current = remoteState
+      setState(remoteState)
+      saveState(remoteState)
+    },
+    [],
+  )
+
+  const applyRemote = useCallback(
+    (remoteState: PlannerState, updatedAt: string | null) => {
+      processIncomingState(remoteState, updatedAt, 'open')
+    },
+    [processIncomingState],
+  )
+
+  const applyLocal = useCallback(
+    (updater: (current: PlannerState) => PlannerState) => {
+      const next = updater(stateRef.current)
+      stateRef.current = next
+      setState(next)
+      saveLastSeen(notificationScopeRef.current, next)
+    },
+    [],
+  )
 
   const bootstrapCloud = useCallback(async () => {
     if (!cloudActive) return
@@ -188,6 +274,7 @@ export function usePlanner() {
         lastRemoteUpdatedAt.current = updatedAt
         markCloudLinked()
         skipNextCloudSave.current = true
+        saveLastSeen(notificationScopeRef.current, local)
         setCloudReady(true)
         setSyncStatus('saved')
         setCloudMessage('Piano locale caricato nel cloud.')
@@ -200,6 +287,7 @@ export function usePlanner() {
         lastRemoteUpdatedAt.current = updatedAt
         markCloudLinked()
         skipNextCloudSave.current = true
+        saveLastSeen(notificationScopeRef.current, initial)
         setState(initial)
         setCloudReady(true)
         setSyncStatus('saved')
@@ -301,13 +389,11 @@ export function usePlanner() {
 
     return subscribeToCloudState((remoteState, updatedAt) => {
       if (lastRemoteUpdatedAt.current && updatedAt <= lastRemoteUpdatedAt.current) return
-      lastRemoteUpdatedAt.current = updatedAt
-      skipNextCloudSave.current = true
-      setState(remoteState)
+      processIncomingState(remoteState, updatedAt, 'live')
       setSyncStatus('saved')
       setSyncError(null)
     })
-  }, [cloudActive, cloudReady, sessionUserId])
+  }, [cloudActive, cloudReady, processIncomingState, sessionUserId])
 
   // Debounced cloud save. Realtime updates and bootstrap pulls skip this effect.
   useEffect(() => {
@@ -368,86 +454,104 @@ export function usePlanner() {
 
   const closeDay = useCallback(() => setSelectedDate(null), [])
 
-  const handleSetNight = useCallback((date: string, personId: PersonId | null) => {
-    setState((current) => setNight(current, date, personId))
-  }, [])
+  const handleSetNight = useCallback(
+    (date: string, personId: PersonId | null) => {
+      applyLocal((current) => setNight(current, date, personId))
+    },
+    [applyLocal],
+  )
 
-  const handleTogglePresence = useCallback((date: string, personId: PersonId) => {
-    setState((current) => togglePresence(current, date, personId))
-  }, [])
+  const handleTogglePresence = useCallback(
+    (date: string, personId: PersonId) => {
+      applyLocal((current) => togglePresence(current, date, personId))
+    },
+    [applyLocal],
+  )
 
-  const handleResetPresence = useCallback((date: string, personId?: PersonId) => {
-    setState((current) => resetPresenceForDay(current, date, personId))
-  }, [])
+  const handleResetPresence = useCallback(
+    (date: string, personId?: PersonId) => {
+      applyLocal((current) => resetPresenceForDay(current, date, personId))
+    },
+    [applyLocal],
+  )
 
   const handleApplyPattern = useCallback(() => {
-    setState((current) => applyPatternToMonth(current, month))
-  }, [month])
+    applyLocal((current) => applyPatternToMonth(current, month))
+  }, [applyLocal, month])
 
   const handleApplyPatternToNextMonths = useCallback(
     (count = 12) => {
       const months = Array.from({ length: count }, (_, index) =>
         addMonthsToMonthKey(month, index),
       )
-      setState((current) => applyPatternToMonths(current, months))
+      applyLocal((current) => applyPatternToMonths(current, months))
     },
-    [month],
+    [applyLocal, month],
   )
 
-  const handleConfirmMonth = useCallback(() => {
-    setState((current) => confirmMonth(current, month))
-  }, [month])
+  const handleAddAbsence = useCallback(
+    (input: AddAbsenceInput) => {
+      const absence = {
+        id: makeId(),
+        personId: input.personId,
+        type: input.type,
+        start: input.start,
+        end: input.end,
+        note: input.note?.trim() || undefined,
+      }
+      applyLocal((current) => addAbsence(current, absence))
+    },
+    [applyLocal],
+  )
 
-  const handleReopenMonth = useCallback(() => {
-    setState((current) => reopenMonth(current, month))
-  }, [month])
+  const handleRemoveAbsence = useCallback(
+    (absenceId: string) => {
+      applyLocal((current) => removeAbsence(current, absenceId))
+    },
+    [applyLocal],
+  )
 
-  const handleAddAbsence = useCallback((input: AddAbsenceInput) => {
-    const absence = {
-      id: makeId(),
-      personId: input.personId,
-      type: input.type,
-      start: input.start,
-      end: input.end,
-      note: input.note?.trim() || undefined,
-    }
-    setState((current) => addAbsence(current, absence))
-  }, [])
+  const handleAddHoliday = useCallback(
+    (holiday: Holiday) => {
+      applyLocal((current) => addHoliday(current, holiday))
+    },
+    [applyLocal],
+  )
 
-  const handleRemoveAbsence = useCallback((absenceId: string) => {
-    setState((current) => removeAbsence(current, absenceId))
-  }, [])
+  const handleRemoveHoliday = useCallback(
+    (date: string) => {
+      applyLocal((current) => removeHoliday(current, date))
+    },
+    [applyLocal],
+  )
 
-  const handleAddHoliday = useCallback((holiday: Holiday) => {
-    setState((current) => addHoliday(current, holiday))
-  }, [])
-
-  const handleRemoveHoliday = useCallback((date: string) => {
-    setState((current) => removeHoliday(current, date))
-  }, [])
-
-  const handleUpdateSettings = useCallback((settings: Partial<PlannerSettings>) => {
-    setState((current) => updateSettings(current, settings))
-  }, [])
+  const handleUpdateSettings = useCallback(
+    (settings: Partial<PlannerSettings>) => {
+      applyLocal((current) => updateSettings(current, settings))
+    },
+    [applyLocal],
+  )
 
   const handleUpdatePerson = useCallback(
     (personId: PersonId, updates: { name?: string; color?: string }) => {
-      setState((current) => updatePerson(current, personId, updates))
+      applyLocal((current) => updatePerson(current, personId, updates))
     },
-    [],
+    [applyLocal],
   )
 
   const handleUpdatePattern = useCallback(
     (weekday: number, personId: PersonId | null) => {
-      setState((current) => updatePattern(current, weekday, personId))
+      applyLocal((current) => updatePattern(current, weekday, personId))
     },
-    [],
+    [applyLocal],
   )
 
   const handleResetDemo = useCallback(() => {
     clearStoredState()
     const next = resetToDemoState()
+    stateRef.current = next
     setState(next)
+    saveLastSeen(notificationScopeRef.current, next)
     setMonth(currentMonthKey())
     setSelectedDate(null)
     setTab('calendar')
@@ -456,7 +560,9 @@ export function usePlanner() {
   const handleImport = useCallback((raw: string) => {
     const parsed = parseImportedState(raw)
     if (!parsed) return false
+    stateRef.current = parsed
     setState(parsed)
+    saveLastSeen(notificationScopeRef.current, parsed)
     setMonth(currentMonthKey())
     setSelectedDate(null)
     return true
@@ -465,7 +571,9 @@ export function usePlanner() {
   const handleResetState = useCallback(() => {
     clearStoredState()
     const next = createInitialState()
+    stateRef.current = next
     setState(next)
+    saveLastSeen(notificationScopeRef.current, next)
   }, [])
 
   const handleSignIn = useCallback(async (email: string, password: string) => {
@@ -487,6 +595,11 @@ export function usePlanner() {
     setSyncStatus('local')
     setCloudMessage(null)
     bootstrappedUserId.current = null
+    setUnreadChanges([])
+    setChangesModalData([])
+    setChangesOpen(false)
+    setChangeToast(null)
+    unreadOrigin.current = null
     setTab('calendar')
     setSelectedDate(null)
   }, [])
@@ -509,6 +622,8 @@ export function usePlanner() {
           lastRemoteUpdatedAt.current = updatedAt
           markCloudLinked()
           skipNextCloudSave.current = true
+          saveLastSeen(notificationScopeRef.current, conflict.local)
+          stateRef.current = conflict.local
           setState(conflict.local)
           setCloudReady(true)
           setSyncStatus('saved')
@@ -597,6 +712,29 @@ export function usePlanner() {
 
   const dismissMessage = useCallback(() => setCloudMessage(null), [])
 
+  const openChanges = useCallback(
+    (changes?: PlanChangeSummary[]) => {
+      const payload = changes?.length ? changes : unreadChanges
+      if (payload.length === 0) return
+      setChangesModalData(payload)
+      setChangesOpen(true)
+      if (!changes?.length) {
+        setUnreadChanges([])
+        unreadOrigin.current = null
+      }
+    },
+    [unreadChanges],
+  )
+
+  const closeChanges = useCallback(() => setChangesOpen(false), [])
+
+  const dismissChanges = useCallback(() => {
+    setUnreadChanges([])
+    unreadOrigin.current = null
+  }, [])
+
+  const dismissToast = useCallback(() => setChangeToast(null), [])
+
   const cloud: CloudController = {
     configured: isSupabaseConfigured,
     active: cloudActive,
@@ -629,6 +767,17 @@ export function usePlanner() {
     selectedDate,
     metrics,
     cloud,
+    notifications: {
+      unread: unreadChanges,
+      count: totalChanges(unreadChanges),
+      modalOpen: changesOpen,
+      modalChanges: changesModalData,
+      toast: changeToast,
+      open: openChanges,
+      close: closeChanges,
+      dismiss: dismissChanges,
+      dismissToast,
+    },
     setTab,
     setMonth: navigateMonth,
     goToPreviousMonth,
@@ -642,8 +791,6 @@ export function usePlanner() {
       resetPresence: handleResetPresence,
       applyPattern: handleApplyPattern,
       applyPatternToNextMonths: handleApplyPatternToNextMonths,
-      confirmMonth: handleConfirmMonth,
-      reopenMonth: handleReopenMonth,
       addAbsence: handleAddAbsence,
       removeAbsence: handleRemoveAbsence,
       addHoliday: handleAddHoliday,

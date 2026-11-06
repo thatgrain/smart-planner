@@ -31,8 +31,7 @@ function isFeedState(value: unknown): value is FeedState {
     Array.isArray(state.nights) &&
     Array.isArray(state.presence) &&
     Array.isArray(state.absences) &&
-    Array.isArray(state.holidays) &&
-    Array.isArray(state.months)
+    Array.isArray(state.holidays)
   )
 }
 

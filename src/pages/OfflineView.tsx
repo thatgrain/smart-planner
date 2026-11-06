@@ -32,7 +32,6 @@ export function OfflineView({ controller }: { controller: PlannerController }) {
     <div className="flex min-h-svh flex-col">
       <Header
         month={month}
-        status={metrics.status}
         onPreviousMonth={goToPreviousMonth}
         onNextMonth={goToNextMonth}
         onToday={goToToday}

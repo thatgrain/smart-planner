@@ -16,7 +16,6 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
   const { state, month, metrics, selectedDate, openDay, closeDay, actions, setTab } = controller
   const [detailsOpen, setDetailsOpen] = useState(false)
   const detailsRef = useRef<HTMLDivElement>(null)
-  const monthInfo = state.months.find((info) => info.month === month)
 
   const showWarnings = () => {
     document.getElementById('warnings-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -62,21 +61,13 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
       <div className="lg:hidden">
         <MobileSummaryBar
           metrics={metrics}
-          monthInfo={monthInfo}
           detailsOpen={detailsOpen}
           onToggleDetails={toggleDetails}
-          onConfirm={actions.confirmMonth}
         />
       </div>
 
       <div className="hidden lg:block">
-        <SummaryCards
-          metrics={metrics}
-          monthInfo={monthInfo}
-          onConfirm={actions.confirmMonth}
-          onReopen={actions.reopenMonth}
-          onShowWarnings={showWarnings}
-        />
+        <SummaryCards metrics={metrics} onShowWarnings={showWarnings} />
       </div>
 
       <div className="space-y-2">
@@ -121,13 +112,7 @@ export function CalendarView({ controller }: { controller: PlannerController }) 
               Chiudi
             </Button>
           </div>
-          <SummaryCards
-            metrics={metrics}
-            monthInfo={monthInfo}
-            onConfirm={actions.confirmMonth}
-            onReopen={actions.reopenMonth}
-            onShowWarnings={showWarnings}
-          />
+          <SummaryCards metrics={metrics} onShowWarnings={showWarnings} />
           <WarningsPanel warnings={metrics.warnings} onOpenDay={openDay} />
         </div>
       ) : null}

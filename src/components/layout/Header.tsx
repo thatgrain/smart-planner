@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  Bell,
   CalendarDays,
   CheckCircle2,
   ChevronLeft,
@@ -15,17 +16,19 @@ import {
 import type { CloudController } from '../../hooks/usePlanner'
 import { useTheme } from '../../hooks/useTheme'
 import { formatMonthLabel } from '../../lib/domain/dates'
-import type { MonthStatus } from '../../lib/domain/types'
 import { Badge, type BadgeVariant } from '../ui/Badge'
 import { Button } from '../ui/Button'
 
 interface HeaderProps {
   month: string
-  status: MonthStatus
   onPreviousMonth: () => void
   onNextMonth: () => void
   onToday: () => void
   cloud: CloudController
+  notifications?: {
+    count: number
+    onOpen: () => void
+  }
 }
 
 function CloudBadge({ cloud }: { cloud: CloudController }) {
@@ -114,11 +117,11 @@ function ThemeToggle() {
 
 export function Header({
   month,
-  status,
   onPreviousMonth,
   onNextMonth,
   onToday,
   cloud,
+  notifications,
 }: HeaderProps) {
   return (
     <header className="border-b border-slate-200/80 bg-white/80 backdrop-blur-xl dark:border-slate-800/80 dark:bg-slate-950/80">
@@ -140,7 +143,24 @@ export function Header({
               </p>
             </div>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            {notifications && notifications.count > 0 ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={notifications.onOpen}
+                className="relative"
+                aria-label={`Novità nel piano (${notifications.count})`}
+                title="Novità dall'ultimo accesso"
+              >
+                <Bell className="h-4 w-4" />
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-indigo-600 px-1 text-[9px] font-semibold leading-none text-white">
+                  {notifications.count > 9 ? '9+' : notifications.count}
+                </span>
+              </Button>
+            ) : null}
+            <ThemeToggle />
+          </div>
         </div>
 
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:justify-start">
@@ -158,7 +178,7 @@ export function Header({
                 {formatMonthLabel(month)}
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                {status === 'confirmed' ? 'Piano confermato' : 'Piano in bozza'}
+                Piano del mese
               </div>
             </div>
             <Button
@@ -176,14 +196,6 @@ export function Header({
             <span className="hidden sm:inline">Oggi</span>
           </Button>
 
-          <span className="hidden sm:inline-flex">
-            <Badge
-              variant={status === 'confirmed' ? 'success' : 'warning'}
-              className="px-2.5 py-1"
-            >
-              {status === 'confirmed' ? 'Confermato' : 'Bozza'}
-            </Badge>
-          </span>
         </div>
       </div>
     </header>

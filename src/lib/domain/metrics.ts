@@ -13,7 +13,6 @@ import {
   isPresenceCoveredByNight,
 } from './coverage'
 import type {
-  MonthStatus,
   NightEntry,
   Person,
   PersonId,
@@ -45,20 +44,11 @@ export interface PersonMetrics {
 
 export interface MonthMetrics {
   month: string
-  status: MonthStatus
   people: Record<PersonId, PersonMetrics>
   handoverDays: string[]
   warnings: PlannerWarning[]
   assignedNights: number
   freeWorkdayNights: string[]
-}
-
-export function getMonthInfo(state: PlannerState, month: string) {
-  return state.months.find((info) => info.month === month)
-}
-
-export function getMonthStatus(state: PlannerState, month: string): MonthStatus {
-  return getMonthInfo(state, month)?.status ?? 'draft'
 }
 
 export function getPersonMetrics(
@@ -255,23 +245,12 @@ export function getMonthMetrics(state: PlannerState, month: string): MonthMetric
     return order[a.severity] - order[b.severity] || (a.date ?? '').localeCompare(b.date ?? '')
   })
 
-  const status = getMonthStatus(state, month)
-  if (status === 'draft') {
-    warnings.push({
-      id: `draft-${month}`,
-      severity: 'info',
-      title: 'Piano del mese in bozza',
-      detail: 'Conferma il mese quando il calendario è condiviso e stabile.',
-    })
-  }
-
   const assignedNights = state.nights.filter(
     (night) => monthKeyOf(night.date) === month && night.personId !== null,
   ).length
 
   return {
     month,
-    status,
     people,
     handoverDays,
     warnings,

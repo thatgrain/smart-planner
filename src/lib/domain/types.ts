@@ -6,8 +6,6 @@ export type PresenceStatus = 'present' | 'excluded'
 
 export type PresenceSource = 'auto' | 'manual'
 
-export type MonthStatus = 'draft' | 'confirmed'
-
 export interface Person {
   id: PersonId
   name: string
@@ -65,14 +63,6 @@ export interface PlannerSettings {
 /** Keys are ISO weekday numbers 1..7. */
 export type WeeklyPattern = Record<number, PersonId | null>
 
-export interface MonthInfo {
-  /** YYYY-MM */
-  month: string
-  status: MonthStatus
-  confirmedAt?: string
-  confirmedBy?: string
-}
-
 export interface PlannerState {
   version: number
   people: Person[]
@@ -82,7 +72,6 @@ export interface PlannerState {
   holidays: Holiday[]
   settings: PlannerSettings
   pattern: WeeklyPattern
-  months: MonthInfo[]
 }
 
 export type PlannerTab = 'calendar' | 'pattern' | 'absences' | 'ics' | 'settings'

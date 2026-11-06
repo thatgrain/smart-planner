@@ -39,18 +39,12 @@ export interface FeedHoliday {
   name: string
 }
 
-export interface FeedMonth {
-  month: string
-  status: 'draft' | 'confirmed'
-}
-
 export interface FeedState {
   people: FeedPerson[]
   nights: FeedNight[]
   presence: FeedPresence[]
   absences: FeedAbsence[]
   holidays: FeedHoliday[]
-  months: FeedMonth[]
   settings?: {
     weekendDays?: number[]
   }
@@ -127,7 +121,6 @@ export function generateCalendar(
     const person = getPerson(state, personId)
 
     for (const month of months) {
-      const statusLabel = getMonthStatus(state, month) === 'confirmed' ? 'piano confermato' : 'bozza'
       const monthPlanned = hasPlanForMonth(state, month)
 
       for (const date of daysInMonth(month)) {
@@ -143,7 +136,7 @@ export function generateCalendar(
             date,
             endDate: addDaysKey(date, 1),
             summary: 'Chiusura aziendale',
-            description: `SmartPlanner · ${statusLabel}`,
+            description: 'SmartPlanner',
             categories: 'ASSENZA',
           })
         }
@@ -154,9 +147,7 @@ export function generateCalendar(
             date,
             endDate: addDaysKey(date, 1),
             summary: `${ABSENCE_LABELS[absence.type] ?? 'Assenza'} – ${person.name}`,
-            description: absence.note
-              ? `SmartPlanner · ${absence.note}`
-              : `SmartPlanner · ${statusLabel}`,
+            description: absence.note ? `SmartPlanner · ${absence.note}` : 'SmartPlanner',
             categories: 'ASSENZA',
           })
         }
@@ -180,7 +171,7 @@ export function generateCalendar(
             date,
             endDate: addDaysKey(date, 1),
             summary: `Ufficio – ${person.name}`,
-            description: `SmartPlanner · ${statusLabel} · ${formatDayShort(date)}`,
+            description: `SmartPlanner · ${formatDayShort(date)}`,
             categories: 'UFFICIO',
           })
         } else if (monthPlanned) {
@@ -189,7 +180,7 @@ export function generateCalendar(
             date,
             endDate: addDaysKey(date, 1),
             summary: `Smart working – ${person.name}`,
-            description: `SmartPlanner · ${statusLabel} · ${formatDayShort(date)}`,
+            description: `SmartPlanner · ${formatDayShort(date)}`,
             categories: 'SMART WORKING',
           })
         }
@@ -247,7 +238,6 @@ export function getFeedMonths(state: FeedState, now = new Date()): string[] {
   for (const absence of state.absences) {
     for (const month of monthsBetween(absence.start, absence.end)) months.add(month)
   }
-  for (const info of state.months) months.add(info.month)
 
   return [...months].sort()
 }
@@ -261,14 +251,7 @@ function getPerson(state: FeedState, personId: PersonId): FeedPerson {
   )
 }
 
-function getMonthStatus(state: FeedState, month: string): 'draft' | 'confirmed' {
-  return state.months.find((info) => info.month === month)?.status ?? 'draft'
-}
-
 function hasPlanForMonth(state: FeedState, month: string): boolean {
-  if (state.months.some((info) => info.month === month && info.status === 'confirmed')) {
-    return true
-  }
   if (state.nights.some((night) => monthKeyOf(night.date) === month && night.personId)) {
     return true
   }
