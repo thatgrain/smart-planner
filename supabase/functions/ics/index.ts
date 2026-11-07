@@ -104,7 +104,7 @@ Deno.serve(async (request) => {
     const headers = restHeaders(serviceRoleKey)
 
     const tokenResponse = await fetch(
-      `${supabaseUrl}/rest/v1/feed_tokens?select=feed&token=eq.${encodeURIComponent(token)}&limit=1`,
+      `${supabaseUrl}/rest/v1/feed_tokens?select=feed,include_office,include_smart,include_absences,include_holidays&token=eq.${encodeURIComponent(token)}&limit=1`,
       { headers },
     )
 
@@ -113,9 +113,16 @@ Deno.serve(async (request) => {
       return textResponse('Feed non disponibile', 500)
     }
 
-    const tokenRows = (await tokenResponse.json()) as Array<{ feed: FeedId }>
-    const feed = tokenRows[0]?.feed
-    if (!feed) return textResponse('Feed non trovato', 404)
+    const tokenRows = (await tokenResponse.json()) as Array<{
+      feed: FeedId
+      include_office: boolean
+      include_smart: boolean
+      include_absences: boolean
+      include_holidays: boolean
+    }>
+    const tokenRow = tokenRows[0]
+    const feed = tokenRow?.feed
+    if (!feed || !tokenRow) return textResponse('Feed non trovato', 404)
 
     const stateResponse = await fetch(
       `${supabaseUrl}/rest/v1/planner_state?select=data&id=eq.1&limit=1`,
@@ -139,8 +146,10 @@ Deno.serve(async (request) => {
     const ics = generateCalendar(state, feed, {
       months: getFeedMonths(state),
       now: new Date(),
-      includeAbsences: true,
-      includeHolidays: false,
+      includeOffice: tokenRow.include_office,
+      includeSmart: tokenRow.include_smart,
+      includeAbsences: tokenRow.include_absences,
+      includeHolidays: tokenRow.include_holidays,
     })
 
     const headersOut = {

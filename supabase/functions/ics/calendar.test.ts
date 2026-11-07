@@ -92,4 +92,40 @@ describe('feed ICS Edge Function', () => {
     const ics = generateCalendar(current, 'A', { months: [NOVEMBER], now })
     expect(ics).not.toContain('BEGIN:VEVENT')
   })
+
+  it('può escludere l’ufficio e tenere solo lo smart working', () => {
+    const ics = generateCalendar(state(), 'A', { months: [NOVEMBER], now, includeOffice: false })
+    expect(ics).not.toContain('SUMMARY:Ufficio – Grano')
+    expect(ics).toContain('SUMMARY:Smart working – Grano')
+  })
+
+  it('può escludere lo smart working e tenere solo l’ufficio', () => {
+    const ics = generateCalendar(state(), 'A', { months: [NOVEMBER], now, includeSmart: false })
+    expect(ics).toContain('SUMMARY:Ufficio – Grano')
+    expect(ics).not.toContain('SUMMARY:Smart working – Grano')
+  })
+
+  it('può escludere le assenze', () => {
+    const current = state()
+    current.absences = [
+      {
+        id: 'absence-1',
+        personId: 'A',
+        start: '2026-11-10',
+        end: '2026-11-10',
+        type: 'vacation',
+      },
+    ]
+
+    const ics = generateCalendar(current, 'A', { months: [NOVEMBER], now, includeAbsences: false })
+    expect(ics).not.toContain('SUMMARY:Ferie – Grano')
+  })
+
+  it('può includere i festivi', () => {
+    const current = state()
+    current.holidays = [{ date: '2026-11-10', name: 'Test' }]
+
+    const ics = generateCalendar(current, 'A', { months: [NOVEMBER], now, includeHolidays: true })
+    expect(ics).toContain('SUMMARY:Festivo – Test')
+  })
 })

@@ -14,9 +14,34 @@ export type IcsFeed = PersonId | 'room'
 
 export interface GenerateIcsOptions {
   months: string[]
+  includeOffice?: boolean
+  includeSmart?: boolean
   includeAbsences?: boolean
   includeHolidays?: boolean
   now?: Date
+}
+
+export interface IcsEventTypes {
+  office: boolean
+  smart: boolean
+  absences: boolean
+  holidays: boolean
+}
+
+export const DEFAULT_ICS_EVENT_TYPES: IcsEventTypes = {
+  office: true,
+  smart: true,
+  absences: true,
+  holidays: false,
+}
+
+export function toIcsOptions(eventTypes: IcsEventTypes): Omit<GenerateIcsOptions, 'months' | 'now'> {
+  return {
+    includeOffice: eventTypes.office,
+    includeSmart: eventTypes.smart,
+    includeAbsences: eventTypes.absences,
+    includeHolidays: eventTypes.holidays,
+  }
 }
 
 interface IcsEvent {
@@ -39,6 +64,8 @@ export function generateIcs(
 ): string {
   const months = [...new Set(options.months)].sort()
   const now = options.now ?? new Date()
+  const includeOffice = options.includeOffice ?? true
+  const includeSmart = options.includeSmart ?? true
   const includeAbsences = options.includeAbsences ?? true
   const includeHolidays = options.includeHolidays ?? false
   const events: IcsEvent[] = []
@@ -109,15 +136,17 @@ export function generateIcs(
         if (!eligible) continue
 
         if (present) {
-          events.push({
-            uid: `sp-${personId}-office-${date}@smartplanner`,
-            date,
-            endDate: addDaysKey(date, 1),
-            summary: `Ufficio – ${person.name}`,
-            description: `SmartPlanner · ${formatDayShort(date)}`,
-            categories: 'UFFICIO',
-          })
-        } else if (monthPlanned) {
+          if (includeOffice) {
+            events.push({
+              uid: `sp-${personId}-office-${date}@smartplanner`,
+              date,
+              endDate: addDaysKey(date, 1),
+              summary: `Ufficio – ${person.name}`,
+              description: `SmartPlanner · ${formatDayShort(date)}`,
+              categories: 'UFFICIO',
+            })
+          }
+        } else if (monthPlanned && includeSmart) {
           events.push({
             uid: `sp-${personId}-sw-${date}@smartplanner`,
             date,

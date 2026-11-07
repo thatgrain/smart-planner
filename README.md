@@ -56,7 +56,7 @@ Weekend, festivi e assenze non entrano nel calcolo. Le assenze individuali riduc
 - Database condiviso con Row Level Security e allowlist delle due email.
 - Sincronizzazione realtime tra i due browser.
 - Salvataggio locale di cache/backup e esportazione/importazione JSON.
-- Download `.ics` e feed ICS in abbonamento con token rigenerabile.
+- Download `.ics` e feed ICS in abbonamento con token rigenerabile, con filtri per tipo di evento sui calendari personali.
 - PWA installabile su Android e iPhone, con icona, schermo intero e cache dell'app.
 - Consultazione offline in sola lettura dell'ultimo piano salvato.
 - Layout mobile semplificato: riepilogo compatto, calendario subito visibile e dettagli espandibili.
@@ -116,6 +116,8 @@ La prima migrazione crea:
 
 La seconda crea `public.feed_tokens`, con i token iniziali dei tre feed ICS e le policy RLS.
 
+La terza aggiunge a `public.feed_tokens` i flag per filtrare i tipi di evento dei calendari personali (`include_office`, `include_smart`, `include_absences`, `include_holidays`).
+
 ### 3. Utenti
 
 In **Authentication → Users → Add user → Create new user** crea i due account:
@@ -150,6 +152,8 @@ npx supabase functions deploy ics --remote=hbmoikaemsyqqmwnnbst --no-verify-jwt 
 ```
 
 `--use-api` evita di richiedere Docker per il bundling.
+
+Da rieseguire ogni volta che cambia il codice della function (per esempio il filtro dei tipi di evento): senza deploy il feed resta quello precedente.
 
 In alternativa, dal repository GitHub: **Actions → Deploy Supabase Function → Run workflow**. Serve prima aggiungere il secret `SUPABASE_ACCESS_TOKEN` in **Settings → Secrets and variables → Actions**.
 
@@ -262,6 +266,10 @@ La scheda **Calendario ICS** offre due modalità per tre calendari:
 - personale di Grano;
 - personale di Pietro;
 - stanza (solo pernottamenti).
+
+### Tipi di evento
+
+Per i due calendari personali puoi scegliere quali tipi di evento esportare tra **ufficio**, **smart working**, **assenze** e **festivi**. La scelta è per-calendario e viene salvata su Supabase: vale sia per il feed in abbonamento sia per i file `.ics` scaricati (in modalità locale solo per i download). Le modifiche al feed si applicano al successivo aggiornamento di Google. I festivi sono disattivati di default per evitare duplicati con i calendari già presenti.
 
 ### Feed in abbonamento
 

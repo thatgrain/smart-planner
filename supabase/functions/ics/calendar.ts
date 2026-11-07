@@ -53,6 +53,8 @@ export interface FeedState {
 export interface GenerateCalendarOptions {
   months?: string[]
   now?: Date
+  includeOffice?: boolean
+  includeSmart?: boolean
   includeAbsences?: boolean
   includeHolidays?: boolean
 }
@@ -96,6 +98,8 @@ export function generateCalendar(
 ): string {
   const now = options.now ?? new Date()
   const months = options.months ?? getFeedMonths(state, now)
+  const includeOffice = options.includeOffice ?? true
+  const includeSmart = options.includeSmart ?? true
   const includeAbsences = options.includeAbsences ?? true
   const includeHolidays = options.includeHolidays ?? false
   const events: FeedEvent[] = []
@@ -166,15 +170,17 @@ export function generateCalendar(
         if (!eligible) continue
 
         if (present) {
-          events.push({
-            uid: `sp-${personId}-office-${date}@smartplanner`,
-            date,
-            endDate: addDaysKey(date, 1),
-            summary: `Ufficio – ${person.name}`,
-            description: `SmartPlanner · ${formatDayShort(date)}`,
-            categories: 'UFFICIO',
-          })
-        } else if (monthPlanned) {
+          if (includeOffice) {
+            events.push({
+              uid: `sp-${personId}-office-${date}@smartplanner`,
+              date,
+              endDate: addDaysKey(date, 1),
+              summary: `Ufficio – ${person.name}`,
+              description: `SmartPlanner · ${formatDayShort(date)}`,
+              categories: 'UFFICIO',
+            })
+          }
+        } else if (monthPlanned && includeSmart) {
           events.push({
             uid: `sp-${personId}-sw-${date}@smartplanner`,
             date,

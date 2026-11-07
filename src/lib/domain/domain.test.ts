@@ -335,6 +335,20 @@ describe('esportazione ICS', () => {
     expect(ics).not.toContain('BEGIN:VEVENT')
   })
 
+  it('può escludere l’ufficio e tenere solo lo smart working', () => {
+    const state = applyPatternToMonth(baseState(), NOVEMBER)
+    const ics = generateIcs(state, 'A', { months: [NOVEMBER], now, includeOffice: false })
+    expect(ics).not.toContain('SUMMARY:Ufficio – Grano')
+    expect(ics).toContain('SUMMARY:Smart working – Grano')
+  })
+
+  it('può escludere lo smart working e tenere solo l’ufficio', () => {
+    const state = applyPatternToMonth(baseState(), NOVEMBER)
+    const ics = generateIcs(state, 'A', { months: [NOVEMBER], now, includeSmart: false })
+    expect(ics).toContain('SUMMARY:Ufficio – Grano')
+    expect(ics).not.toContain('SUMMARY:Smart working – Grano')
+  })
+
   it('esegue l’escape di virgole e punti e virgola', () => {
     let state = baseState()
     state = addAbsence(state, {

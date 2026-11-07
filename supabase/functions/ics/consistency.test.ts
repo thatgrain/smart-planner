@@ -59,4 +59,16 @@ describe('coerenza feed frontend / Edge Function', () => {
     const edge = generateCalendar(state, 'room', { months: [NOVEMBER], now })
     expect(edge).toBe(frontend)
   })
+
+  it('produce lo stesso calendario personale con i tipi di evento filtrati', () => {
+    const options = {
+      months: [NOVEMBER],
+      now,
+      includeOffice: false,
+      includeHolidays: true,
+    }
+    const frontend = generateIcs(state, 'A', options)
+    const edge = generateCalendar(state, 'A', options)
+    expect(edge).toBe(frontend)
+  })
 })

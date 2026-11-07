@@ -6,6 +6,7 @@ import type {
 import { isPlannerState, normaliseState } from './storage'
 import { supabase, supabaseUrl } from './supabase'
 import type { PlannerState } from './domain/types'
+import type { IcsEventTypes } from './domain/ics'
 
 export const PLANNER_ROW_ID = 1
 
@@ -14,6 +15,15 @@ export type FeedId = 'A' | 'B' | 'room'
 export interface FeedTokenRow {
   feed: FeedId
   token: string
+  include_office: boolean
+  include_smart: boolean
+  include_absences: boolean
+  include_holidays: boolean
+}
+
+export interface FeedConfig {
+  token: string
+  eventTypes: IcsEventTypes
 }
 
 export interface CloudLoadResult {
@@ -216,17 +226,27 @@ export function subscribeToCloudState(
   }
 }
 
-export async function loadFeedTokens(): Promise<Partial<Record<FeedId, string>>> {
+export async function loadFeedTokens(): Promise<Partial<Record<FeedId, FeedConfig>>> {
   if (!supabase) return {}
 
-  const { data, error } = await supabase.from('feed_tokens').select('feed, token')
+  const { data, error } = await supabase
+    .from('feed_tokens')
+    .select('feed, token, include_office, include_smart, include_absences, include_holidays')
   if (error) throw error
 
-  const tokens: Partial<Record<FeedId, string>> = {}
+  const configs: Partial<Record<FeedId, FeedConfig>> = {}
   for (const row of data as FeedTokenRow[]) {
-    tokens[row.feed] = row.token
+    configs[row.feed] = {
+      token: row.token,
+      eventTypes: {
+        office: row.include_office,
+        smart: row.include_smart,
+        absences: row.include_absences,
+        holidays: row.include_holidays,
+      },
+    }
   }
-  return tokens
+  return configs
 }
 
 export function generateFeedToken(): string {
@@ -256,6 +276,22 @@ export async function saveFeedToken(feed: FeedId): Promise<string> {
 
   if (error) throw error
   return (data as { token: string }).token
+}
+
+export async function saveFeedEventTypes(feed: FeedId, eventTypes: IcsEventTypes): Promise<void> {
+  if (!supabase) throw new Error('Supabase non configurato')
+
+  const { error } = await supabase
+    .from('feed_tokens')
+    .update({
+      include_office: eventTypes.office,
+      include_smart: eventTypes.smart,
+      include_absences: eventTypes.absences,
+      include_holidays: eventTypes.holidays,
+    })
+    .eq('feed', feed)
+
+  if (error) throw error
 }
 
 export function getFeedUrl(token: string): string {

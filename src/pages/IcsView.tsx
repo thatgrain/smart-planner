@@ -17,13 +17,22 @@ import {
 } from 'lucide-react'
 import type { PlannerController } from '../hooks/usePlanner'
 import { formatMonthLabel } from '../lib/domain/dates'
-import { generateIcs, getDefaultIcsMonths, type IcsFeed } from '../lib/domain/ics'
+import {
+  DEFAULT_ICS_EVENT_TYPES,
+  generateIcs,
+  getDefaultIcsMonths,
+  toIcsOptions,
+  type IcsEventTypes,
+  type IcsFeed,
+} from '../lib/domain/ics'
 import { downloadTextFile } from '../lib/download'
 import {
   formatCloudError,
   getFeedUrl,
   loadFeedTokens,
+  saveFeedEventTypes,
   saveFeedToken,
+  type FeedConfig,
   type FeedId,
 } from '../lib/cloud'
 import { Badge } from '../components/ui/Badge'
@@ -31,7 +40,7 @@ import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { PersonAvatar } from '../components/ui/PersonAvatar'
-import type { Person } from '../lib/domain/types'
+import type { Person, PersonId } from '../lib/domain/types'
 
 function formatFeedTokensError(error: unknown): string {
   const typed = error as { code?: string; message?: string } | null
@@ -50,26 +59,75 @@ function formatFeedTokensError(error: unknown): string {
   return formatCloudError(error).message
 }
 
+const EVENT_TYPE_FIELDS: Array<{ key: keyof IcsEventTypes; label: string }> = [
+  { key: 'office', label: 'Ufficio' },
+  { key: 'smart', label: 'Smart working' },
+  { key: 'absences', label: 'Assenze' },
+  { key: 'holidays', label: 'Festivi' },
+]
+
+function summarizeEventTypes(eventTypes: IcsEventTypes): string {
+  const active = EVENT_TYPE_FIELDS.filter(({ key }) => eventTypes[key]).map(({ label }) => label)
+  return active.length > 0 ? active.join(', ') : 'Nessun evento'
+}
+
+function EventTypeChecklist({
+  value,
+  busy,
+  onChange,
+}: {
+  value: IcsEventTypes
+  busy: boolean
+  onChange: (next: IcsEventTypes) => void
+}) {
+  return (
+    <fieldset className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5">
+      <legend className="sr-only">Tipi di evento</legend>
+      {EVENT_TYPE_FIELDS.map(({ key, label }) => (
+        <label
+          key={key}
+          className="flex items-center gap-1.5 text-[11px] text-slate-600 dark:text-slate-400"
+        >
+          <input
+            type="checkbox"
+            checked={value[key]}
+            disabled={busy}
+            onChange={(event) => onChange({ ...value, [key]: event.target.checked })}
+            className="h-3.5 w-3.5 rounded border-slate-300 accent-indigo-600"
+          />
+          {label}
+        </label>
+      ))}
+    </fieldset>
+  )
+}
+
 function SubscriptionFeedCard({
   title,
   description,
   person,
   token,
+  eventTypes,
+  typesBusy,
   busy,
   copied,
   onCopy,
   onGenerate,
   onRotate,
+  onEventTypesChange,
 }: {
   title: string
   description: string
   person?: Person
   token?: string
+  eventTypes?: IcsEventTypes
+  typesBusy: boolean
   busy: boolean
   copied: boolean
   onCopy: () => void
   onGenerate: () => void
   onRotate: () => void
+  onEventTypesChange: (next: IcsEventTypes) => void
 }) {
   const url = token ? getFeedUrl(token) : ''
 
@@ -95,6 +153,10 @@ function SubscriptionFeedCard({
       </div>
 
       <p className="mt-3 flex-1 text-[11px] leading-5 text-slate-500 dark:text-slate-400">{description}</p>
+
+      {person && eventTypes ? (
+        <EventTypeChecklist value={eventTypes} busy={typesBusy} onChange={onEventTypesChange} />
+      ) : null}
 
       {token ? (
         <div className="mt-3 space-y-2">
@@ -158,7 +220,12 @@ export function IcsView({ controller }: { controller: PlannerController }) {
   const { state, month, cloud } = controller
   const months = useMemo(() => getDefaultIcsMonths(month, 12), [month])
 
-  const [tokens, setTokens] = useState<Partial<Record<FeedId, string>>>({})
+  const [configs, setConfigs] = useState<Partial<Record<FeedId, FeedConfig>>>({})
+  const [eventTypes, setEventTypes] = useState<Record<PersonId, IcsEventTypes>>({
+    A: DEFAULT_ICS_EVENT_TYPES,
+    B: DEFAULT_ICS_EVENT_TYPES,
+  })
+  const [savingTypesFeed, setSavingTypesFeed] = useState<FeedId | null>(null)
   const [tokensLoading, setTokensLoading] = useState(false)
   const [tokensLoadError, setTokensLoadError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -180,7 +247,15 @@ export function IcsView({ controller }: { controller: PlannerController }) {
       try {
         const value = await loadFeedTokens()
         if (controllerAbort.signal.aborted) return
-        setTokens(value)
+        setConfigs(value)
+        setEventTypes((current) => {
+          const next = { ...current }
+          for (const id of ['A', 'B'] as PersonId[]) {
+            const config = value[id]
+            if (config) next[id] = config.eventTypes
+          }
+          return next
+        })
       } catch (error) {
         if (controllerAbort.signal.aborted) return
         setTokensLoadError(formatFeedTokensError(error))
@@ -202,7 +277,7 @@ export function IcsView({ controller }: { controller: PlannerController }) {
     ...state.people.map((person) => ({
       id: person.id,
       title: `Calendario di ${person.name}`,
-      description: 'Ufficio, smart working e assenze personali.',
+      description: 'Tipi di evento configurabili.',
       calendarName: `SmartPlanner – ${person.name}`,
     })),
     {
@@ -222,7 +297,7 @@ export function IcsView({ controller }: { controller: PlannerController }) {
     ...state.people.map((person) => ({
       id: person.id,
       title: `Calendario di ${person.name}`,
-      description: 'Ufficio, smart working e assenze personali.',
+      description: 'Tipi di evento configurabili.',
       person,
     })),
     {
@@ -233,11 +308,9 @@ export function IcsView({ controller }: { controller: PlannerController }) {
   ]
 
   const generate = (feed: IcsFeed) =>
-    generateIcs(state, feed, {
-      months,
-      includeAbsences: feed !== 'room',
-      includeHolidays: false,
-    })
+    feed === 'room'
+      ? generateIcs(state, feed, { months })
+      : generateIcs(state, feed, { months, ...toIcsOptions(eventTypes[feed]) })
 
   const download = (feed: IcsFeed) => {
     const content = generate(feed)
@@ -254,7 +327,8 @@ export function IcsView({ controller }: { controller: PlannerController }) {
     setActionError(null)
     try {
       const token = await saveFeedToken(feed)
-      setTokens((current) => ({ ...current, [feed]: token }))
+      const types = feed === 'room' ? DEFAULT_ICS_EVENT_TYPES : eventTypes[feed]
+      setConfigs((current) => ({ ...current, [feed]: { token, eventTypes: types } }))
       setCopiedFeed(null)
     } catch (error) {
       setActionError(formatFeedTokensError(error))
@@ -263,8 +337,23 @@ export function IcsView({ controller }: { controller: PlannerController }) {
     }
   }
 
+  const handleEventTypesChange = async (feed: PersonId, next: IcsEventTypes) => {
+    setEventTypes((current) => ({ ...current, [feed]: next }))
+    if (!cloud.active) return
+
+    setSavingTypesFeed(feed)
+    setActionError(null)
+    try {
+      await saveFeedEventTypes(feed, next)
+    } catch (error) {
+      setActionError(formatFeedTokensError(error))
+    } finally {
+      setSavingTypesFeed(null)
+    }
+  }
+
   const handleCopy = async (feed: FeedId) => {
-    const token = tokens[feed]
+    const token = configs[feed]?.token
     if (!token) return
     const url = getFeedUrl(token)
 
@@ -358,12 +447,17 @@ export function IcsView({ controller }: { controller: PlannerController }) {
                 title={feed.title}
                 description={feed.description}
                 person={feed.person}
-                token={tokens[feed.id]}
+                token={configs[feed.id]?.token}
+                eventTypes={feed.person ? eventTypes[feed.person.id] : undefined}
+                typesBusy={savingTypesFeed === feed.id}
                 busy={busyFeed === feed.id}
                 copied={copiedFeed === feed.id}
                 onCopy={() => void handleCopy(feed.id)}
                 onGenerate={() => void handleGenerate(feed.id)}
                 onRotate={() => setRotateFeed(feed.id)}
+                onEventTypesChange={(next) => {
+                  if (feed.person) void handleEventTypesChange(feed.person.id, next)
+                }}
               />
             ))}
           </div>
@@ -464,6 +558,7 @@ export function IcsView({ controller }: { controller: PlannerController }) {
             const eventCount = content.split('BEGIN:VEVENT').length - 1
             const person =
               feed.id === 'room' ? null : state.people.find((item) => item.id === feed.id)
+            const personalId = feed.id === 'room' ? null : feed.id
 
             return (
               <Card key={feed.id} className="flex flex-col p-5">
@@ -489,6 +584,20 @@ export function IcsView({ controller }: { controller: PlannerController }) {
                   {formatMonthLabel(months[months.length - 1], { short: true })}.
                 </p>
 
+                {personalId ? (
+                  !cloud.active ? (
+                    <EventTypeChecklist
+                      value={eventTypes[personalId]}
+                      busy={false}
+                      onChange={(next) => void handleEventTypesChange(personalId, next)}
+                    />
+                  ) : (
+                    <div className="mt-3 text-[10px] text-slate-400 dark:text-slate-500">
+                      Tipi: {summarizeEventTypes(eventTypes[personalId])}
+                    </div>
+                  )
+                ) : null}
+
                 <Button
                   variant="secondary"
                   size="sm"
@@ -508,10 +617,12 @@ export function IcsView({ controller }: { controller: PlannerController }) {
         <div className="flex items-start gap-2 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-indigo-500 dark:text-indigo-400" />
           <span>
-            I feed personali includono ufficio, smart working e assenze. Il feed stanza contiene
-            solo i pernottamenti. I festivi nazionali non vengono esportati per evitare duplicati
-            con i calendari già presenti. I mesi senza notti, assenze o piano confermato esportano
-            solo le presenze esplicite.
+            Ogni calendario personale può includere ufficio, smart working, assenze e festivi:
+            scegli i tipi dalla checklist. Le modifiche ai feed in abbonamento si applicano al
+            successivo aggiornamento di Google. Il feed stanza contiene solo i pernottamenti. I
+            festivi nazionali non vengono esportati di default per evitare duplicati con i
+            calendari già presenti. I mesi senza notti, assenze o piano confermato esportano solo
+            le presenze esplicite.
           </span>
         </div>
       </Card>
