@@ -80,7 +80,7 @@ export function generateIcs(
           uid: `sp-room-${date}@smartplanner`,
           date,
           endDate: addDaysKey(date, 1),
-          summary: `Notte in stanza – ${person.name}`,
+          summary: `${person.name} – Notte in stanza`,
           description: 'Pernottamento registrato su SmartPlanner.',
           categories: 'STANZA',
         })
@@ -116,7 +116,7 @@ export function generateIcs(
             uid: `sp-${personId}-absence-${absence.id}-${date}@smartplanner`,
             date,
             endDate: addDaysKey(date, 1),
-            summary: `${ABSENCE_LABELS[absence.type]} – ${person.name}`,
+            summary: `${person.name} – ${ABSENCE_LABELS[absence.type]}`,
             description: absence.note ? `SmartPlanner · ${absence.note}` : 'SmartPlanner',
             categories: 'ASSENZA',
           })
@@ -141,7 +141,7 @@ export function generateIcs(
               uid: `sp-${personId}-office-${date}@smartplanner`,
               date,
               endDate: addDaysKey(date, 1),
-              summary: `Ufficio – ${person.name}`,
+              summary: `${person.name} – Ufficio`,
               description: `SmartPlanner · ${formatDayShort(date)}`,
               categories: 'UFFICIO',
             })
@@ -151,7 +151,7 @@ export function generateIcs(
             uid: `sp-${personId}-sw-${date}@smartplanner`,
             date,
             endDate: addDaysKey(date, 1),
-            summary: `Smart working – ${person.name}`,
+            summary: `${person.name} – Smart working`,
             description: `SmartPlanner · ${formatDayShort(date)}`,
             categories: 'SMART WORKING',
           })

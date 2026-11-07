@@ -41,8 +41,8 @@ describe('feed ICS Edge Function', () => {
 
     expect(ics).toContain('BEGIN:VCALENDAR')
     expect(ics).toContain('X-WR-CALNAME:SmartPlanner – Grano')
-    expect(ics).toContain('SUMMARY:Ufficio – Grano')
-    expect(ics).toContain('SUMMARY:Smart working – Grano')
+    expect(ics).toContain('SUMMARY:Grano – Ufficio')
+    expect(ics).toContain('SUMMARY:Grano – Smart working')
     expect(ics).toContain('UID:sp-A-office-2026-11-02@smartplanner')
     expect(ics).toContain('DTSTART;VALUE=DATE:20261102')
     expect(ics).not.toContain('DTSTART;VALUE=DATE:20261101')
@@ -53,8 +53,8 @@ describe('feed ICS Edge Function', () => {
   it('genera il feed stanza con i pernottamenti', () => {
     const ics = generateCalendar(state(), 'room', { months: [NOVEMBER], now })
 
-    expect(ics).toContain('SUMMARY:Notte in stanza – Grano')
-    expect(ics).toContain('SUMMARY:Notte in stanza – Pietro')
+    expect(ics).toContain('SUMMARY:Grano – Notte in stanza')
+    expect(ics).toContain('SUMMARY:Pietro – Notte in stanza')
     expect(ics).toContain('UID:sp-room-2026-11-02@smartplanner')
     expect(ics.split('BEGIN:VEVENT')).toHaveLength(5)
   })
@@ -95,14 +95,14 @@ describe('feed ICS Edge Function', () => {
 
   it('può escludere l’ufficio e tenere solo lo smart working', () => {
     const ics = generateCalendar(state(), 'A', { months: [NOVEMBER], now, includeOffice: false })
-    expect(ics).not.toContain('SUMMARY:Ufficio – Grano')
-    expect(ics).toContain('SUMMARY:Smart working – Grano')
+    expect(ics).not.toContain('SUMMARY:Grano – Ufficio')
+    expect(ics).toContain('SUMMARY:Grano – Smart working')
   })
 
   it('può escludere lo smart working e tenere solo l’ufficio', () => {
     const ics = generateCalendar(state(), 'A', { months: [NOVEMBER], now, includeSmart: false })
-    expect(ics).toContain('SUMMARY:Ufficio – Grano')
-    expect(ics).not.toContain('SUMMARY:Smart working – Grano')
+    expect(ics).toContain('SUMMARY:Grano – Ufficio')
+    expect(ics).not.toContain('SUMMARY:Grano – Smart working')
   })
 
   it('può escludere le assenze', () => {
@@ -118,7 +118,7 @@ describe('feed ICS Edge Function', () => {
     ]
 
     const ics = generateCalendar(current, 'A', { months: [NOVEMBER], now, includeAbsences: false })
-    expect(ics).not.toContain('SUMMARY:Ferie – Grano')
+    expect(ics).not.toContain('SUMMARY:Grano – Ferie')
   })
 
   it('può includere i festivi', () => {

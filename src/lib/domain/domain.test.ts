@@ -309,8 +309,8 @@ describe('esportazione ICS', () => {
 
     expect(ics).toContain('BEGIN:VCALENDAR')
     expect(ics).toContain('END:VCALENDAR')
-    expect(ics).toContain('SUMMARY:Ufficio – Grano')
-    expect(ics).toContain('SUMMARY:Smart working – Grano')
+    expect(ics).toContain('SUMMARY:Grano – Ufficio')
+    expect(ics).toContain('SUMMARY:Grano – Smart working')
     expect(ics).toContain('DTSTART;VALUE=DATE:20261102')
     expect(ics).toContain('DTEND;VALUE=DATE:20261103')
     expect(ics).toContain('UID:sp-A-office-2026-11-02@smartplanner')
@@ -324,8 +324,8 @@ describe('esportazione ICS', () => {
     const state = applyPatternToMonth(baseState(), NOVEMBER)
     const ics = generateIcs(state, 'room', { months: [NOVEMBER], now })
 
-    expect(ics).toContain('SUMMARY:Notte in stanza – Grano')
-    expect(ics).toContain('SUMMARY:Notte in stanza – Pietro')
+    expect(ics).toContain('SUMMARY:Grano – Notte in stanza')
+    expect(ics).toContain('SUMMARY:Pietro – Notte in stanza')
     expect(ics).toContain('UID:sp-room-2026-11-02@smartplanner')
     expect(ics.split('BEGIN:VEVENT')).toHaveLength(18)
   })
@@ -338,15 +338,15 @@ describe('esportazione ICS', () => {
   it('può escludere l’ufficio e tenere solo lo smart working', () => {
     const state = applyPatternToMonth(baseState(), NOVEMBER)
     const ics = generateIcs(state, 'A', { months: [NOVEMBER], now, includeOffice: false })
-    expect(ics).not.toContain('SUMMARY:Ufficio – Grano')
-    expect(ics).toContain('SUMMARY:Smart working – Grano')
+    expect(ics).not.toContain('SUMMARY:Grano – Ufficio')
+    expect(ics).toContain('SUMMARY:Grano – Smart working')
   })
 
   it('può escludere lo smart working e tenere solo l’ufficio', () => {
     const state = applyPatternToMonth(baseState(), NOVEMBER)
     const ics = generateIcs(state, 'A', { months: [NOVEMBER], now, includeSmart: false })
-    expect(ics).toContain('SUMMARY:Ufficio – Grano')
-    expect(ics).not.toContain('SUMMARY:Smart working – Grano')
+    expect(ics).toContain('SUMMARY:Grano – Ufficio')
+    expect(ics).not.toContain('SUMMARY:Grano – Smart working')
   })
 
   it('esegue l’escape di virgole e punti e virgola', () => {
